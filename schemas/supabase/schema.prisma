@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String
+  owner            User[]
+  pricingPackageId String           @db.Uuid
+  pricingPackage   PricingPackage   @relation(fields: [pricingPackageId], references: [id])
+  settings         Json?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  forms            Form[]
+  meterings        Metering[]
+  apiKeys          ApiKey[]
+}
+
+model Feature {
+  id                       String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                     String                   @unique
+  unit                     String
+  description              String?
+  pricingPackageFeatures   PricingPackageFeature[]
+  meterings                Metering[]
+  // ADD THESE:
+  meterType                MeterType                @default(ON_OFF) // COUNT or ON_OFF
+  timeframe                Timeframe?               @default(MONTHLY) // MONTHLY, YEARLY, null
+}
+
+model PricingPackageFeature {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  pricingPackageId String           @db.Uuid
+  featureId        String           @db.Uuid
+  limitValue       Int?
+  // ADD THIS:
+  status           Boolean          @default(true) // on/off for this feature in this package
+
+  pricingPackage   PricingPackage   @relation(fields: [pricingPackageId], references: [id])
+  feature          Feature          @relation(fields: [featureId], references: [id])
+
+  @@unique([pricingPackageId, featureId])
+}
+
+model Metering {
+  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId   String        @db.Uuid
+  featureId        String        @db.Uuid
+  currentValue     Int           @default(0)
+  // ADD THESE for timeframe management:
+  periodStart      DateTime      @default(now())
+  periodEnd        DateTime      // when this period resets
+
+  organization     Organization  @relation(fields: [organizationId], references: [id])
+  feature          Feature       @relation(fields: [featureId], references: [id])
+ 
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@unique([organizationId, featureId])
+}
+
+// ADD THESE ENUMS:
+enum MeterType {
+  COUNT
+  ON_OFF
+}
+
+enum Timeframe {
+  MONTHLY
+  YEARLY
+  FOREVER
+}

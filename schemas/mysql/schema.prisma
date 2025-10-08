@@ -1,0 +1,120 @@
+// This is your Prisma schema file for MySQL,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id               Int              @id @default(autoincrement())
+  name             String
+  owner            User[]
+  pricingPackageId Int
+  pricingPackage   PricingPackage   @relation(fields: [pricingPackageId], references: [id], onDelete: Cascade)
+  settings         Json?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  forms            Form[]
+  meterings        Metering[]
+  apiKeys          ApiKey[]
+
+  @@map("organizations")
+}
+
+model Feature {
+  id                     Int                      @id @default(autoincrement())
+  name                   String                   @unique
+  unit                   String
+  description            String?
+  meterType              MeterType                @default(ON_OFF)
+  timeframe              Timeframe?               @default(MONTHLY)
+  pricingPackageFeatures PricingPackageFeature[]
+  meterings              Metering[]
+
+  @@map("features")
+}
+
+model PricingPackage {
+  id              Int                      @id @default(autoincrement())
+  name            String                   @unique
+  priceMonthly    Int?
+  organizations   Organization[]
+  features        PricingPackageFeature[]
+
+  @@map("pricing_packages")
+}
+
+model PricingPackageFeature {
+  id               Int             @id @default(autoincrement())
+  pricingPackageId Int
+  featureId        Int
+  limitValue       Int?
+  status           Boolean         @default(true)
+
+  pricingPackage   PricingPackage  @relation(fields: [pricingPackageId], references: [id], onDelete: Cascade)
+  feature          Feature         @relation(fields: [featureId], references: [id], onDelete: Cascade)
+
+  @@unique([pricingPackageId, featureId])
+  @@map("pricing_package_features")
+}
+
+model Metering {
+  id             Int          @id @default(autoincrement())
+  organizationId Int
+  featureId      Int
+  currentValue   Int          @default(0)
+  periodStart    DateTime     @default(now())
+  periodEnd      DateTime
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  feature        Feature      @relation(fields: [featureId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, featureId])
+  @@map("meterings")
+}
+
+// Other related models (assuming they exist)
+model User {
+  id             Int            @id @default(autoincrement())
+  organizationId Int
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  // ... other fields
+
+  @@map("users")
+}
+
+model Form {
+  id             Int          @id @default(autoincrement())
+  organizationId Int
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  // ... other fields
+
+  @@map("forms")
+}
+
+model ApiKey {
+  id             Int          @id @default(autoincrement())
+  organizationId Int
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  // ... other fields
+
+  @@map("api_keys")
+}
+
+enum MeterType {
+  COUNT
+  ON_OFF
+}
+
+enum Timeframe {
+  MONTHLY
+  YEARLY
+  FOREVER
+}
