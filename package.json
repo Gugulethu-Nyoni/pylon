@@ -1,0 +1,27 @@
+{
+  "name": "@semantq/pylon",
+  "version": "1.0.0",
+  "description": "Feature Guard Package For SaaS Applications",
+  "keywords": [
+    "Billing",
+    "SaaS",
+    "SaaS",
+    "Feature",
+    "Guard"
+  ],
+  "homepage": "https://github.com/Gugulethu-Nyoni/pylon#readme",
+  "bugs": {
+    "url": "https://github.com/Gugulethu-Nyoni/pylon/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Gugulethu-Nyoni/pylon.git"
+  },
+  "license": "MIT",
+  "author": "Gugulethu Nyoni",
+  "type": "module", 
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
