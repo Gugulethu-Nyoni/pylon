@@ -1,6 +1,6 @@
 {
   "name": "@semantq/pylon",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "description": "Feature Guard Package For SaaS Applications",
   "keywords": [
     "Billing",
@@ -9,10 +9,6 @@
     "Feature",
     "Guard"
   ],
-  "semantq-module": true,
-  "publishConfig": {
-    "access": "public"
-  },
   "homepage": "https://github.com/Gugulethu-Nyoni/pylon#readme",
   "bugs": {
     "url": "https://github.com/Gugulethu-Nyoni/pylon/issues"
