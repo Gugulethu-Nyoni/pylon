@@ -1,5 +1,5 @@
 import ModelModel from '../models/supabase/Model.js';
-import ModelsManifest from '../lib/models_manifest.js';
+import ModelsManifest from '../../../../lib/models_manifest.js';
 
 class ModelService {
   async create(data) {

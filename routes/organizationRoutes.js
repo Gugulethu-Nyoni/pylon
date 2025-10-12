@@ -1,7 +1,7 @@
 import express from 'express';
 import organizationController from '../controllers/organizationController.js';
 // Import authentication and authorization middleware
-import { validateApiKey } from '../middleware/validateApiKey.js';
+import { validateApiKey } from '../../../../middleware/validateApiKey.js';
 import { authenticateToken } from '@semantq/auth/lib/middleware/authMiddleware.js';
 import { authorize } from '@semantq/auth/lib/middleware/authorize.js';
 

@@ -1,4 +1,4 @@
-import FeatureModel from '../models/supabase/Feature.js';
+import FeatureModel from '../models/mysql/Feature.js';
 
 class FeatureService {
   async create(data) {
@@ -6,15 +6,7 @@ class FeatureService {
   }
 
   async getById(id) {
-    const feature = await FeatureModel.findById(id);
-    if (!feature) throw new Error('Feature not found');
-    return feature;
-  }
-
-  async getByName(name) {
-    const feature = await FeatureModel.findByName(name);
-    if (!feature) throw new Error('Feature not found');
-    return feature;
+    return await FeatureModel.findById(id);
   }
 
   async getAll() {
@@ -22,12 +14,10 @@ class FeatureService {
   }
 
   async update(id, data) {
-    await this.getById(id); // Verify exists
     return await FeatureModel.update(id, data);
   }
 
   async delete(id) {
-    await this.getById(id); // Verify exists
     return await FeatureModel.delete(id);
   }
 }

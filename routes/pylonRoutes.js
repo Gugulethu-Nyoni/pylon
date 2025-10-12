@@ -1,9 +1,9 @@
 import express from 'express';
 import pylonController from '../controllers/pylonController.js';
 // Import authentication and authorization middleware
-import { validateApiKey } from '../middleware/validateApiKey.js';
-import { authenticateToken } from '@semantq/auth/lib/middleware/authMiddleware.js';
-import { authorize } from '@semantq/auth/lib/middleware/authorize.js';
+import { validateApiKey } from '../../../../middleware/validateApiKey.js';
+import { authenticateToken } from '../../../@semantq/auth/lib/middleware/authMiddleware.js';
+import { authorize } from '../../../@semantq/auth/lib/middleware/authorize.js';
 
 const router = express.Router();
 

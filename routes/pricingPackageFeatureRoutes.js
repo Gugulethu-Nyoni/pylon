@@ -1,7 +1,7 @@
 import express from 'express';
 import pricingPackageFeatureController from '../controllers/pricingPackageFeatureController.js';
 // Import authentication and authorization middleware
-import { validateApiKey } from '../middleware/validateApiKey.js';
+import { validateApiKey } from '../../../../middleware/validateApiKey.js';
 import { authenticateToken } from '@semantq/auth/lib/middleware/authMiddleware.js';
 import { authorize } from '@semantq/auth/lib/middleware/authorize.js';
 
@@ -20,11 +20,11 @@ const router = express.Router();
 // router.get('/pricingPackageFeatures/latest', pricingPackageFeatureController.getLatestPricingPackageFeatures);
 
 // 🟡 AUTHENTICATED - Logged-in users only
-router.get('/pricingPackageFeatures', authenticateToken, pricingPackageFeatureController.getAllPricingPackageFeatures);
-router.get('/pricingPackageFeatures/:id', authenticateToken, pricingPackageFeatureController.getPricingPackageFeatureById);
-router.post('/pricingPackageFeatures', authenticateToken, pricingPackageFeatureController.createPricingPackageFeature);
-router.put('/pricingPackageFeatures/:id', authenticateToken, pricingPackageFeatureController.updatePricingPackageFeature);
-router.delete('/pricingPackageFeatures/:id', authenticateToken, pricingPackageFeatureController.deletePricingPackageFeature); // 🆕 DELETE route added
+router.get('/pricingPackageFeature/pricingPackageFeatures', authenticateToken, pricingPackageFeatureController.getAllPricingPackageFeatures);
+router.get('/pricingPackageFeature/pricingPackageFeatures/:id', authenticateToken, pricingPackageFeatureController.getPricingPackageFeatureById);
+router.post('/pricingPackageFeature/pricingPackageFeatures', authenticateToken, pricingPackageFeatureController.createPricingPackageFeature);
+router.put('/pricingPackageFeature/pricingPackageFeatures/:id', authenticateToken, pricingPackageFeatureController.updatePricingPackageFeature);
+router.delete('/pricingPackageFeature/pricingPackageFeatures/:id', authenticateToken, pricingPackageFeatureController.deletePricingPackageFeature); // 🆕 DELETE route added
 
 // 🟠 AUTHORIZED - Specific user roles
 // For example, this route requires an access level of 2

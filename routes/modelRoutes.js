@@ -1,7 +1,7 @@
 import express from 'express';
 import modelController from '../controllers/modelController.js';
 // Import authentication and authorization middleware
-import { validateApiKey } from '../middleware/validateApiKey.js';
+import { validateApiKey } from '../../../../middleware/validateApiKey.js';
 import { authenticateToken } from '@semantq/auth/lib/middleware/authMiddleware.js';
 import { authorize } from '@semantq/auth/lib/middleware/authorize.js';
 
@@ -20,11 +20,11 @@ const router = express.Router();
 // router.get('/models/latest', modelController.getLatestModels);
 
 // 🟡 AUTHENTICATED - Logged-in users only
-router.get('/models', modelController.getAllModels);
-router.get('/models/:id', authenticateToken, modelController.getModelById);
-router.post('/models', authenticateToken, modelController.createModel);
-router.put('/models/:id', authenticateToken, modelController.updateModel);
-router.delete('/models/:id', authenticateToken, modelController.deleteModel); // 🆕 DELETE route added
+router.get('/model/models', modelController.getAllModels);
+router.get('/model/models/:id', authenticateToken, modelController.getModelById);
+router.post('/model/models', authenticateToken, modelController.createModel);
+router.put('/model/models/:id', authenticateToken, modelController.updateModel);
+router.delete('/model/models/:id', authenticateToken, modelController.deleteModel); // 🆕 DELETE route added
 
 // 🟠 AUTHORIZED - Specific user roles
 // For example, this route requires an access level of 2

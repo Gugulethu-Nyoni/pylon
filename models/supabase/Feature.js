@@ -11,7 +11,7 @@ model Feature {
 */
 
 // Import the function that returns the Prisma client promise
-import getPrismaClient from '../../lib/prisma.js';
+import getPrismaClient from '../../../../../lib/prisma.js';
 
 export default class FeatureModel {
   static async create(data) {

@@ -3,7 +3,17 @@ import pricingPackageFeatureService from '../services/pricingPackageFeatureServi
 class PricingPackageFeatureController {
   async createPricingPackageFeature(req, res) {
     try {
-      const result = await pricingPackageFeatureService.create(req.body);
+      
+      const { pricingPackageId, featureId, limitValue, status } = req.body; 
+
+      const finalData = {
+        pricingPackageId:pricingPackageId,
+        featureId: featureId,
+        limitValue: parseInt(limitValue),
+        status: parseInt(status) > 0 ? true : false 
+      }
+
+      const result = await pricingPackageFeatureService.create(finalData);
       res.status(201).json(result);
     } catch (err) {
       res.status(400).json({ error: err.message });
