@@ -1,6 +1,3 @@
-// This is your Prisma schema file for MySQL,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,107 +7,216 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id                            Int           @id @default(autoincrement())
+  access_level                  Int           @default(1)
+  name                          String?
+  surname                       String?
+  email                         String        @unique
+  password_hash                 String
+  is_verified                   Boolean       @default(false)
+  verification_token            String?       @db.VarChar(512)
+  verification_token_expires_at DateTime?
+  reset_token                   String?       @db.VarChar(512)
+  reset_token_expires_at        DateTime?
+  last_login_at                 DateTime?
+  failed_login_attempts         Int           @default(0)
+  status                        UserStatus    @default(active)
+  organizationId                Int?
+  createdAt                     DateTime      @default(now()) @map("created_at")
+  updatedAt                     DateTime      @default(now()) @updatedAt @map("updated_at")
+  authLogs                      AuthLog[]
+  forms                         Form[]
+  sessions                      Session[]
+  submissions                   Submission[]
+  organization                  Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId], map: "users_organizationId_fkey")
+  @@map("users")
+}
+
+model Session {
+  id          String    @id @default(uuid())
+  userId      Int
+  token       String    @unique
+  device_info String?
+  ip_address  String?
+  is_revoked  Boolean   @default(false)
+  revoked_at  DateTime?
+  expires_at  DateTime
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([expires_at])
+  @@index([userId, is_revoked, expires_at])
+  @@map("sessions")
+}
+
+model AuthLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  ip        String?
+  userAgent String?
+  event     String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("auth_logs")
+}
+
 model Organization {
   id               Int              @id @default(autoincrement())
-  name             String
-  owner            User[]
-  pricingPackageId Int
-  pricingPackage   PricingPackage   @relation(fields: [pricingPackageId], references: [id], onDelete: Cascade)
+  name             String?
+  pricingPackageId String
   settings         Json?
+  paidPeriodStart  DateTime?
+  paidPeriodEnd    DateTime?
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
-  forms            Form[]
-  meterings        Metering[]
+  pricingPackage   PricingPackage   @relation(fields: [pricingPackageId], references: [id])
   apiKeys          ApiKey[]
+  forms            Form[]
+  packagePayments  PackagePayment[]
+  owner            User[]
 
-  @@map("organizations")
+  @@index([pricingPackageId], map: "Organization_pricingPackageId_fkey")
 }
 
 model Feature {
-  id                     Int                      @id @default(autoincrement())
-  name                   String                   @unique
+  id                     String                  @id @default(uuid())
+  name                   String                  @unique
   unit                   String
   description            String?
-  meterType              MeterType                @default(ON_OFF)
-  timeframe              Timeframe?               @default(MONTHLY)
+  timeframe              Timeframe?              @default(MONTHLY)
+  count                  Boolean?
+  on_off                 Boolean?
   pricingPackageFeatures PricingPackageFeature[]
-  meterings              Metering[]
 
   @@map("features")
 }
 
+model PackagePayment {
+  id               String         @id @default(uuid())
+  organizationId   Int
+  pricingPackageId String
+  amount           Int
+  paymentStatus    PaymentStatus  @default(PENDING)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  organization     Organization   @relation(fields: [organizationId], references: [id])
+  pricingPackage   PricingPackage @relation(fields: [pricingPackageId], references: [id])
+
+  @@index([organizationId], map: "package_payments_organizationId_fkey")
+  @@index([pricingPackageId], map: "package_payments_pricingPackageId_fkey")
+  @@map("package_payments")
+}
+
 model PricingPackage {
-  id              Int                      @id @default(autoincrement())
-  name            String                   @unique
-  priceMonthly    Int?
-  organizations   Organization[]
-  features        PricingPackageFeature[]
+  id                            String                  @id @default(uuid())
+  name                          String                  @unique
+  priceMonthly                  Int?
+  priceYearly                   Int?
+  isStandard                    Boolean?                @default(false)
+  pricingTableLabel             String?
+  yearlyPriceDiscountPercentage Decimal?
+  organizations                 Organization[]
+  packagePayments               PackagePayment[]
+  features                      PricingPackageFeature[]
 
   @@map("pricing_packages")
 }
 
 model PricingPackageFeature {
-  id               Int             @id @default(autoincrement())
-  pricingPackageId Int
-  featureId        Int
+  id               String         @id @default(uuid())
+  pricingPackageId String
+  featureId        String
   limitValue       Int?
-  status           Boolean         @default(true)
-
-  pricingPackage   PricingPackage  @relation(fields: [pricingPackageId], references: [id], onDelete: Cascade)
-  feature          Feature         @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  status           Boolean        @default(true)
+  feature          Feature        @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  pricingPackage   PricingPackage @relation(fields: [pricingPackageId], references: [id], onDelete: Cascade)
 
   @@unique([pricingPackageId, featureId])
+  @@index([featureId], map: "pricing_package_features_featureId_fkey")
   @@map("pricing_package_features")
 }
 
 model Metering {
-  id             Int          @id @default(autoincrement())
-  organizationId Int
-  featureId      Int
-  currentValue   Int          @default(0)
-  periodStart    DateTime     @default(now())
-  periodEnd      DateTime
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  id             String   @id @default(uuid())
+  organizationId String
+  featureName    String
+  action         String
+  metadata       Json?
+  createdAt      DateTime @default(now())
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  feature        Feature      @relation(fields: [featureId], references: [id], onDelete: Cascade)
-
-  @@unique([organizationId, featureId])
   @@map("meterings")
 }
 
-// Other related models (assuming they exist)
-model User {
-  id             Int            @id @default(autoincrement())
-  organizationId Int
-  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  // ... other fields
-
-  @@map("users")
-}
-
 model Form {
-  id             Int          @id @default(autoincrement())
+  id             String       @id @default(uuid())
   organizationId Int
+  title          String
+  slug           String       @unique
+  formSchema     Json
+  formSettings   Json?
+  formParams     Json?
+  createdById    Int?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  mode           String
+  createdBy      User?        @relation(fields: [createdById], references: [id], onDelete: Cascade)
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  // ... other fields
+  submissions    Submission[]
 
+  @@index([createdById], map: "forms_createdById_fkey")
+  @@index([organizationId], map: "forms_organizationId_fkey")
   @@map("forms")
 }
 
-model ApiKey {
-  id             Int          @id @default(autoincrement())
-  organizationId Int
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  // ... other fields
+model Submission {
+  id            String   @id @default(uuid())
+  formId        String
+  data          Json
+  metadata      Json?
+  submittedById Int?
+  createdAt     DateTime @default(now())
+  form          Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+  submittedBy   User?    @relation(fields: [submittedById], references: [id], onDelete: Cascade)
 
+  @@index([formId], map: "submissions_formId_fkey")
+  @@index([submittedById], map: "submissions_submittedById_fkey")
+  @@map("submissions")
+}
+
+model ApiKey {
+  id             String       @id @default(uuid())
+  organizationId Int
+  keyPrefix      String       @unique
+  hashedKey      String
+  permissions    Json?
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId], map: "api_keys_organizationId_fkey")
   @@map("api_keys")
 }
 
-enum MeterType {
-  COUNT
-  ON_OFF
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum UserStatus {
+  active
+  locked
+  suspended
 }
 
 enum Timeframe {
