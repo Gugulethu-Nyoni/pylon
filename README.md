@@ -125,6 +125,188 @@ The service uses the dedicated **`Metering`** table for performant counter manag
 | **Pre-Check** | `pylonService.canAccess(orgId, featureKey)` | Use before running a feature (e.g., check if the user can send a bulk email). |
 | **Increment** | `pylonService.incrementUsage(orgId, featureKey, count)` | Use after a successful action to update the `QuotaUsage` table atomically. |
 
+
+
+
+
+# Pylon Documentation: Use Case Example
+
+## V. Use Case: Project Management SaaS (Project Management App)
+
+Let's walk through integrating Pylon into your Project Management application, focusing on managing **metered CRUD** features (like creating projects) and **tiered Non-CRUD** features (like generating reports).
+
+**Your Application Models:**
+
+  * `Project` (Metered CRUD)
+  * `Task` (Metered CRUD)
+  * `Report` (Tiered Non-CRUD)
+
+
+
+### 1\. Pylon Setup: Define Your Contract
+
+As the Superadmin, you first define the entitlements that Pylon will enforce via the Pylon administrative interfaces:
+
+| Package | Feature Name | Type | Limit (`limitValue`) | Access (`on_off`) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Freemium** | `Project_create` | CRUD | **3 / monthly** | $\checkmark$ |
+| **Freemium** | `Report_create` | Non-CRUD | 0 | $\times$ |
+| **Premium** | `Project_create` | CRUD | **100 / monthly** | $\checkmark$ |
+| **Premium** | `Report_create` | Non-CRUD | Unlimited (`-1`) | $\checkmark$ |
+
+
+
+### 2\. Backend Integration: Guarding and Metering
+
+Use the Semantq CLI to generate your resource, ensuring Pylon middleware is automatically attached to the route layer.
+
+**Generate Your Resource:**
+Run the following command for your model. This command creates the necessary files and includes the Pylon middleware in the routes.
+
+```bash
+semantq make:resource Project -pylon
+```
+
+#### A. Guarding Metered CRUD (Project Creation)
+
+In your routes file, notice how Pylon intercepts the request. Pylon automatically resolves the feature as `'Project_create'` for validation.
+
+```javascript
+// /routes/project.js
+import pylonService from '@semantq/pylon/services/pylonService.js';
+
+// The POST route is intercepted before the controller runs.
+router.post('/projects', 
+    authenticateToken, 
+    // Pylon checks the 'Project' model against the 'create' action.
+    pylonService.featureGuard('Project', 'create'), 
+    formController.createProject 
+);
+```
+
+**Crucially, meter the usage in the service layer after success:**
+
+```javascript
+// /services/projectService.js (Called AFTER successful database write)
+async function createProject(data, organizationId) {
+    // 1. Core Logic: Save the project
+    const newProject = await prisma.project.create({ data });
+    
+    // 2. Metering: Increment the usage counter. This updates the QuotaUsage table.
+    await pylonService.incrementUsage(organizationId, 'Project_create', 1);
+
+    return newProject;
+}
+```
+
+#### B. Guarding Tiered Non-CRUD (Report Creation)
+
+For the non-CRUD feature, guard the action using the specific feature name you defined. Pylon checks the simple access status (`on_off`).
+
+```javascript
+// /routes/report.js
+import pylonService from '@semantq/pylon/services/pylonService.js';
+
+// Pylon checks the specific feature name 'Report_create'
+router.post('/reports', 
+    authenticateToken, 
+    pylonService.featureGuard('Report_create', 'access'), 
+    reportController.generateReport 
+);
+```
+
+
+
+### 3\. Frontend Gating: Guiding the User
+
+Your frontend must reflect the current entitlements and usage. Pylon provides the consolidated `EFFECTIVE_FEATURES` object (containing `limitValue`, `current_month_usage`, etc.) for you to use in your templates.
+
+#### A. Project Creation Component (Metered CRUD Logic)
+
+You must move all complex statements into the component's script block, making simple variables available for use in the Semantq template.
+
+**Component Script Block (Conceptual):**
+
+```javascript
+@script
+  // EFFECTIVE_FEATURES provides the final, consolidated features object.
+  const feature = EFFECTIVE_FEATURES.Project_create;
+  
+  let usage = 0;
+  let limit = 0;
+  let canCreate = false;
+  let projectsLeft = 0;
+
+  if (feature && feature.enabled) {
+      usage = feature.current_month_usage;
+      limit = feature.limitValue;
+      canCreate = usage < limit;
+      projectsLeft = limit - usage;
+  }
+  
+  function showUpgradeModal() { /* ... modal opening logic ... */ }
+@end
+```
+
+**Semantq Template (`ProjectCreationForm.semantq`):**
+Use simple variable interpolation and logic blocks for rendering.
+
+```html
+<div class="project-creation-module">
+  
+  @if(feature && feature.enabled)
+    
+    @if(canCreate)
+      <div class="usage-status">
+        You have {projectsLeft} projects left this month.
+      </div>
+      
+      <form action="/projects" method="POST">
+        <input type="text" placeholder="Project Name" />
+        <button type="submit">Create New Project</button>
+      </form>
+      
+    @else
+      <div class="limit-exceeded-message">
+        <p>Limit Reached: You have used all {limit} project slots.</p>
+        <button @click={showUpgradeModal}>Upgrade to Premium</button>
+      </div>
+    @endif
+    
+  @endif
+  
+</div>
+```
+
+#### B. Reporting Component (Tiered Non-CRUD Logic)
+
+Check the simple `enabled` status of the `Report_create` feature to gate access to the report generation button.
+
+```html
+<div class="reporting-dashboard">
+  
+  @if(reportFeature && reportFeature.enabled)
+    <button @click={generateNewReport}>Generate Comprehensive Report</button>
+  @else
+    <div class="paywall">
+      <p>Comprehensive Reporting requires a Premium plan.</p>
+      <button @click={showUpgradeModal}>Unlock Reports</button>
+    </div>
+  @endif
+  
+</div>
+```
+
+[semantqQL Guide](https://github.com/Gugulethu-Nyoni/semantqQL)
+
+
+
+
+
+
+
+
+<!--
 **Example: Generating a Screentime Report:**
 
 ```javascript
