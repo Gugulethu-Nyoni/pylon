@@ -6,7 +6,7 @@ Pylon is the robust, opinionated module for the SemantqQL framework, providing e
 
 ## Installation
 
-From your project root: run: `cd semantqQL` and run: `npm i @semantq/ql`
+From your project root: run: `cd semantqQL` and run: `npm i @semantq/pylon`
 
 This will install the Pylon module in your app backend server. 
 
