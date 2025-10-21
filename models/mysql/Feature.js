@@ -34,6 +34,18 @@ export default class FeatureModel {
     return prisma.feature.findUnique({ where: { id } });
   }
 
+  /// getNonCrudFeatureNames
+
+  static async getNonCrudFeatureNames() {
+  const prisma = await getPrismaClient();
+  const result = await prisma.feature.findMany({
+    where: { non_crud_feature_set_name: { not: null } }, // exclude nulls
+    select: { id: true, non_crud_feature_set_name: true },
+  });
+  console.log("✅ Prisma returned:", result);
+  return result;
+}
+
   /**
    * Retrieves all features from the database.
    * @returns {Promise<Array<object>>} An array of all feature objects.

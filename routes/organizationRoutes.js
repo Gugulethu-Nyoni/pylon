@@ -20,11 +20,11 @@ const router = express.Router();
 // router.get('/organizations/latest', organizationController.getLatestOrganizations);
 
 // 🟡 AUTHENTICATED - Logged-in users only
-router.get('/organizations', authenticateToken, organizationController.getAllOrganizations);
-router.get('/organizations/:id', authenticateToken, organizationController.getOrganizationById);
-router.post('/organizations', authenticateToken, organizationController.createOrganization);
-router.put('/organizations/:id', authenticateToken, organizationController.updateOrganization);
-router.delete('/organizations/:id', authenticateToken, organizationController.deleteOrganization); // 🆕 DELETE route added
+router.get('/organization/organizations', authenticateToken, organizationController.getAllOrganizations);
+router.get('/organization/organizations/:id', authenticateToken, organizationController.getOrganizationById);
+router.post('/organization/organizations', authenticateToken, organizationController.createOrganization);
+router.put('/organization/organizations/:id', authenticateToken, organizationController.updateOrganization);
+router.delete('/organization/organizations/:id', authenticateToken, organizationController.deleteOrganization); // 🆕 DELETE route added
 
 // 🟠 AUTHORIZED - Specific user roles
 // For example, this route requires an access level of 2

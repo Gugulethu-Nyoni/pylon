@@ -23,7 +23,7 @@ class PylonService {
 
 // simulate
 
-let allowed = true;
+let allowed = false;
 
 
 return async (req, res, next) => {

@@ -9,6 +9,12 @@ class FeatureService {
     return await FeatureModel.findById(id);
   }
 
+  // getNonCrudFeatureNames
+
+  async getNonCrudFeatureNames() {
+    return await FeatureModel.getNonCrudFeatureNames();
+  }
+
   async getAll() {
     return await FeatureModel.findAll();
   }

@@ -4,13 +4,18 @@ class PricingPackageFeatureController {
   async createPricingPackageFeature(req, res) {
     try {
       
-      const { pricingPackageId, featureId, limitValue, status } = req.body; 
+      const { seats,pricingPackageId, featureId, limitValue, status } = req.body; 
 
       const finalData = {
         pricingPackageId:pricingPackageId,
         featureId: featureId,
-        limitValue: parseInt(limitValue),
+        limitValue: parseInt(limitValue,10),
+
         status: parseInt(status) > 0 ? true : false 
+      }
+
+      if (seats) {
+        finalData.seats = parseInt(seats,10);
       }
 
       const result = await pricingPackageFeatureService.create(finalData);

@@ -22,8 +22,15 @@ const model = 'Feature';
 // router.get('/features/latest', featureController.getLatestFeatures);
 
 // 🟡 AUTHENTICATED - Logged-in users only
+// /@semantq/pylon/feature/features/noncrud
+
+
 router.get('/feature/features', authenticateToken, featureController.getAllFeatures);
 router.get('/feature/features/:id', authenticateToken, featureController.getFeatureById);
+
+// get non crud feature set names 
+router.get('/feature/features/noncrud/names', authenticateToken, featureController.getNonCrudFeatureNames);
+
 router.post('/feature/features', authenticateToken, featureController.createFeature);
 router.put('/feature/features/:id', authenticateToken, featureController.updateFeature);
 router.delete('/feature/features/:id', authenticateToken, featureController.deleteFeature); // 🆕 DELETE route added

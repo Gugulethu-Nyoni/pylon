@@ -3,6 +3,7 @@ import organizationService from '../services/organizationService.js';
 class OrganizationController {
   async createOrganization(req, res) {
     try {
+      console.log(req.body);
       const result = await organizationService.create(req.body);
       res.status(201).json(result);
     } catch (err) {

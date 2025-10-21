@@ -7,217 +7,68 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
-model User {
-  id                            Int           @id @default(autoincrement())
-  access_level                  Int           @default(1)
-  name                          String?
-  surname                       String?
-  email                         String        @unique
-  password_hash                 String
-  is_verified                   Boolean       @default(false)
-  verification_token            String?       @db.VarChar(512)
-  verification_token_expires_at DateTime?
-  reset_token                   String?       @db.VarChar(512)
-  reset_token_expires_at        DateTime?
-  last_login_at                 DateTime?
-  failed_login_attempts         Int           @default(0)
-  status                        UserStatus    @default(active)
-  organizationId                Int?
-  createdAt                     DateTime      @default(now()) @map("created_at")
-  updatedAt                     DateTime      @default(now()) @updatedAt @map("updated_at")
-  authLogs                      AuthLog[]
-  forms                         Form[]
-  sessions                      Session[]
-  submissions                   Submission[]
-  organization                  Organization? @relation(fields: [organizationId], references: [id])
-
-  @@index([organizationId], map: "users_organizationId_fkey")
-  @@map("users")
-}
-
-model Session {
-  id          String    @id @default(uuid())
-  userId      Int
-  token       String    @unique
-  device_info String?
-  ip_address  String?
-  is_revoked  Boolean   @default(false)
-  revoked_at  DateTime?
-  expires_at  DateTime
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([token])
-  @@index([expires_at])
-  @@index([userId, is_revoked, expires_at])
-  @@map("sessions")
-}
-
-model AuthLog {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  ip        String?
-  userAgent String?
-  event     String
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([createdAt])
-  @@map("auth_logs")
-}
-
 model Organization {
-  id               Int              @id @default(autoincrement())
-  name             String?
-  pricingPackageId String
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String
+  owner            User[]
+  pricingPackageId String           @db.Uuid
+  pricingPackage   PricingPackage   @relation(fields: [pricingPackageId], references: [id])
   settings         Json?
-  paidPeriodStart  DateTime?
-  paidPeriodEnd    DateTime?
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
-  pricingPackage   PricingPackage   @relation(fields: [pricingPackageId], references: [id])
-  apiKeys          ApiKey[]
   forms            Form[]
-  packagePayments  PackagePayment[]
-  owner            User[]
-
-  @@index([pricingPackageId], map: "Organization_pricingPackageId_fkey")
+  meterings        Metering[]
+  apiKeys          ApiKey[]
 }
 
 model Feature {
-  id                     String                  @id @default(uuid())
-  name                   String                  @unique
-  unit                   String
-  description            String?
-  timeframe              Timeframe?              @default(MONTHLY)
-  count                  Boolean?
-  on_off                 Boolean?
-  pricingPackageFeatures PricingPackageFeature[]
-
-  @@map("features")
-}
-
-model PackagePayment {
-  id               String         @id @default(uuid())
-  organizationId   Int
-  pricingPackageId String
-  amount           Int
-  paymentStatus    PaymentStatus  @default(PENDING)
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  organization     Organization   @relation(fields: [organizationId], references: [id])
-  pricingPackage   PricingPackage @relation(fields: [pricingPackageId], references: [id])
-
-  @@index([organizationId], map: "package_payments_organizationId_fkey")
-  @@index([pricingPackageId], map: "package_payments_pricingPackageId_fkey")
-  @@map("package_payments")
-}
-
-model PricingPackage {
-  id                            String                  @id @default(uuid())
-  name                          String                  @unique
-  priceMonthly                  Int?
-  priceYearly                   Int?
-  isStandard                    Boolean?                @default(false)
-  pricingTableLabel             String?
-  yearlyPriceDiscountPercentage Decimal?
-  organizations                 Organization[]
-  packagePayments               PackagePayment[]
-  features                      PricingPackageFeature[]
-
-  @@map("pricing_packages")
+  id                       String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                     String                   @unique
+  unit                     String
+  description              String?
+  pricingPackageFeatures   PricingPackageFeature[]
+  meterings                Metering[]
+  // ADD THESE:
+  meterType                MeterType                @default(ON_OFF) // COUNT or ON_OFF
+  timeframe                Timeframe?               @default(MONTHLY) // MONTHLY, YEARLY, null
 }
 
 model PricingPackageFeature {
-  id               String         @id @default(uuid())
-  pricingPackageId String
-  featureId        String
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  pricingPackageId String           @db.Uuid
+  featureId        String           @db.Uuid
   limitValue       Int?
-  status           Boolean        @default(true)
-  feature          Feature        @relation(fields: [featureId], references: [id], onDelete: Cascade)
-  pricingPackage   PricingPackage @relation(fields: [pricingPackageId], references: [id], onDelete: Cascade)
+  // ADD THIS:
+  status           Boolean          @default(true) // on/off for this feature in this package
+
+  pricingPackage   PricingPackage   @relation(fields: [pricingPackageId], references: [id])
+  feature          Feature          @relation(fields: [featureId], references: [id])
 
   @@unique([pricingPackageId, featureId])
-  @@index([featureId], map: "pricing_package_features_featureId_fkey")
-  @@map("pricing_package_features")
 }
 
 model Metering {
-  id             String   @id @default(uuid())
-  organizationId String
-  featureName    String
-  action         String
-  metadata       Json?
-  createdAt      DateTime @default(now())
+  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId   String        @db.Uuid
+  featureId        String        @db.Uuid
+  currentValue     Int           @default(0)
+  // ADD THESE for timeframe management:
+  periodStart      DateTime      @default(now())
+  periodEnd        DateTime      // when this period resets
 
-  @@map("meterings")
+  organization     Organization  @relation(fields: [organizationId], references: [id])
+  feature          Feature       @relation(fields: [featureId], references: [id])
+ 
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@unique([organizationId, featureId])
 }
 
-model Form {
-  id             String       @id @default(uuid())
-  organizationId Int
-  title          String
-  slug           String       @unique
-  formSchema     Json
-  formSettings   Json?
-  formParams     Json?
-  createdById    Int?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  mode           String
-  createdBy      User?        @relation(fields: [createdById], references: [id], onDelete: Cascade)
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  submissions    Submission[]
-
-  @@index([createdById], map: "forms_createdById_fkey")
-  @@index([organizationId], map: "forms_organizationId_fkey")
-  @@map("forms")
-}
-
-model Submission {
-  id            String   @id @default(uuid())
-  formId        String
-  data          Json
-  metadata      Json?
-  submittedById Int?
-  createdAt     DateTime @default(now())
-  form          Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
-  submittedBy   User?    @relation(fields: [submittedById], references: [id], onDelete: Cascade)
-
-  @@index([formId], map: "submissions_formId_fkey")
-  @@index([submittedById], map: "submissions_submittedById_fkey")
-  @@map("submissions")
-}
-
-model ApiKey {
-  id             String       @id @default(uuid())
-  organizationId Int
-  keyPrefix      String       @unique
-  hashedKey      String
-  permissions    Json?
-  createdAt      DateTime     @default(now())
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  @@index([organizationId], map: "api_keys_organizationId_fkey")
-  @@map("api_keys")
-}
-
-enum PaymentStatus {
-  PENDING
-  COMPLETED
-  FAILED
-  REFUNDED
-  CANCELLED
-}
-
-enum UserStatus {
-  active
-  locked
-  suspended
+// ADD THESE ENUMS:
+enum MeterType {
+  COUNT
+  ON_OFF
 }
 
 enum Timeframe {
