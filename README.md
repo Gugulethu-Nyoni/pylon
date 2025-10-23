@@ -58,7 +58,6 @@ Critical Columns:
 **Purpose:** Connect each customer organization to their subscription tier.
 
 
-
 ### **Step 5: Automatic Metering Creation (Runtime)**
 **Model: `Metering`**
 ```
@@ -82,6 +81,9 @@ Critical Columns:
      └-→ (n) [Metering] (1) ←┘
                          (usage tracking)
 ```
+## Add Seats and Licencing 
+
+You can create `seats` as feature and a it pricing packages like other non crud features. 
 
 ## SuperAdmin Setup Sequence:
 
@@ -127,6 +129,7 @@ Critical Columns:
 5. **Metering auto-creation:**
    - When Acme Inc creates first form → `Metering` record created: `org=Acme, feature=form_create, currentValue=1`
    - When Startup LLC tries bulk email → Blocked (status=false in Freemium)
+
 
 
 
