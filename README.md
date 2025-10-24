@@ -69,7 +69,7 @@ Critical Columns:
 - periodEnd → 2024-02-01 (end of current period)
 ```
 
-**Purpose:** Track real-time usage per organization per feature. Created automatically when first used.
+**Purpose:** Track real-time usage per organization per feature. Created automatically when first used. Work as both feature guard and feature usage metering module.
 
 
 
