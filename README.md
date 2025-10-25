@@ -16,6 +16,8 @@ Critical Columns:
 - description → "Monthly form creation limit"
 ```
 
+Then create pricing packages and add features to them. 
+
 **Purpose:** Catalog of all possible billable features in the system.
 
 
