@@ -8,7 +8,7 @@ Feature Guard Package For SaaS Aaplications
 **Model: `Feature`**
 ```
 Critical Columns:
-- id (UUID)
+- id (UUID) (esp for supabase)
 - name (UNIQUE) → "form_create", "bulk_email", "display_stats"
 - meterType → COUNT | ON_OFF
 - timeframe → MONTHLY | YEARLY | FOREVER | null
