@@ -8,7 +8,7 @@ Feature Guard Package For SaaS Aaplications
 **Model: `Feature`**
 ```
 Critical Columns:
-- id (UUID) (esp for supabase)
+- id (UUID) (esp for supabase and other DBs)
 - name (UNIQUE) → "form_create", "bulk_email", "display_stats"
 - meterType → COUNT | ON_OFF
 - timeframe → MONTHLY | YEARLY | FOREVER | null
@@ -83,7 +83,7 @@ Critical Columns:
      └-→ (n) [Metering] (1) ←┘
                          (usage tracking)
 ```
-## Add Seats and Licencing 
+## Add Seats and Licencing (Optional)
 
 You can create `seats` as feature and a it pricing packages like other non crud features. 
 
