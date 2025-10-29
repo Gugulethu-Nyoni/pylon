@@ -103,6 +103,7 @@ You can create `seats` as feature and a it pricing packages like other non crud 
    Package 1: name="Freemium", priceMonthly=0
    Package 2: name="Starter", priceMonthly=29  
    Package 3: name="Pro", priceMonthly=99
+   Package 4: name="Enterprise", priceMonthly=299
    ```
 
 3. **Assign Features to Packages:**
