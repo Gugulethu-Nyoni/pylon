@@ -36,7 +36,66 @@ export default class MeteringModel {
     });
   }
 
-  static async findByOrganizationAndFeature(organizationId, featureId) {
+
+static async countMonthlyUsage(organizationId, featureName) {
+  const prisma = await getPrismaClient();
+
+  // Ensure organizationId is a string
+  const orgId = String(organizationId);
+
+  // Get the start and end of the current month (UTC-safe)
+  const now = new Date();
+  const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const endOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+
+  // Count how many records fall within this month
+  const count = await prisma.metering.count({
+    where: {
+      organizationId: orgId,
+      featureName,
+      createdAt: {
+        gte: startOfMonth,
+        lt: endOfMonth,
+      },
+    },
+  });
+
+  return count;
+}
+
+
+
+
+static async countYearlyUsage(organizationId, featureName) {
+  const prisma = await getPrismaClient();
+
+  // Ensure organizationId is a string
+  const orgId = String(organizationId);
+
+  // Get the start and end of the current year (UTC-safe)
+  const now = new Date();
+  const startOfYear = new Date(Date.UTC(now.getUTCFullYear(), 0, 1)); // Jan 1
+  const endOfYear = new Date(Date.UTC(now.getUTCFullYear() + 1, 0, 1)); // Jan 1 next year
+
+  // Count how many records fall within this year
+  const count = await prisma.metering.count({
+    where: {
+      organizationId: orgId,
+      featureName,
+      createdAt: {
+        gte: startOfYear,
+        lt: endOfYear,
+      },
+    },
+  });
+
+  return count;
+}
+
+
+
+
+static async findByOrganizationAndFeature(organizationId, featureId) {
     const prisma = await getPrismaClient();
     return prisma.metering.findUnique({
       where: {

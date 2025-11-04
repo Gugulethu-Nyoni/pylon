@@ -47,6 +47,34 @@ export default class OrganizationModel {
     });
   }
 
+
+  /**
+  * Simulates a payment by setting the paid period for a full year.
+  * @param {string | number} id - The ID of the organization to update.
+  * @returns {Promise<object>} The updated organization record.
+  */
+ static async simulatePayment (id) {
+  // Get the current time for paidPeriodStart
+  const paidPeriodStart = new Date();
+  
+  // Calculate the paidPeriodEnd (one year from now)
+  const paidPeriodEnd = new Date();
+  paidPeriodEnd.setFullYear(paidPeriodEnd.getFullYear() + 1);
+
+  const prisma = await getPrismaClient();
+
+  // Update the organization record
+  return prisma.organization.update({
+   where: { id },
+   data: {
+    paidPeriodStart: paidPeriodStart,
+    paidPeriodEnd: paidPeriodEnd,
+   },
+  });
+ }
+
+
+
   static async update(id, data) {
     const prisma = await getPrismaClient();
     return prisma.organization.update({

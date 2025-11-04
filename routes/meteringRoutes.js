@@ -21,6 +21,10 @@ const router = express.Router();
 
 // 🟡 AUTHENTICATED - Logged-in users only
 router.get('/meterings', authenticateToken, meteringController.getAllMeterings);
+//
+router.get('/meterings/monthly/usage/:organizationId/:featureName', authenticateToken, meteringController.getMonthlyUsage);
+
+
 router.get('/meterings/:id', authenticateToken, meteringController.getMeteringById);
 router.post('/meterings', authenticateToken, meteringController.createMetering);
 router.put('/meterings/:id', authenticateToken, meteringController.updateMetering);

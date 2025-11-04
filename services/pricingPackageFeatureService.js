@@ -1,4 +1,4 @@
-import PricingPackageFeatureModel from '../models/supabase/PricingPackageFeature.js';
+import PricingPackageFeatureModel from '../models/mysql/PricingPackageFeature.js';
 
 class PricingPackageFeatureService {
   async create(data) {

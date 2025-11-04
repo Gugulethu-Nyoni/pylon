@@ -8,7 +8,7 @@ Feature Guard Package For SaaS Aaplications
 **Model: `Feature`**
 ```
 Critical Columns:
-- id (UUID) (esp for supabase and other DBs)
+- id (UUID)
 - name (UNIQUE) → "form_create", "bulk_email", "display_stats"
 - meterType → COUNT | ON_OFF
 - timeframe → MONTHLY | YEARLY | FOREVER | null
@@ -16,11 +16,9 @@ Critical Columns:
 - description → "Monthly form creation limit"
 ```
 
-Then create pricing packages and add features to them. 
-
 **Purpose:** Catalog of all possible billable features in the system.
 
-
+---
 
 ### **Step 2: Create Pricing Packages (Product Tiers)**
 **Model: `PricingPackage`**
@@ -33,7 +31,7 @@ Critical Columns:
 
 **Purpose:** Define the subscription tiers available to organizations.
 
-
+---
 
 ### **Step 3: Connect Features to Packages (Feature Gates)**
 **Model: `PricingPackageFeature`** (Junction Table)
@@ -47,7 +45,7 @@ Critical Columns:
 
 **Purpose:** Define exactly what features each pricing package includes and their limits.
 
-
+---
 
 ### **Step 4: Assign Organizations to Packages**
 **Model: `Organization`**
@@ -59,6 +57,7 @@ Critical Columns:
 
 **Purpose:** Connect each customer organization to their subscription tier.
 
+---
 
 ### **Step 5: Automatic Metering Creation (Runtime)**
 **Model: `Metering`**
@@ -71,21 +70,18 @@ Critical Columns:
 - periodEnd → 2024-02-01 (end of current period)
 ```
 
-**Purpose:** Track real-time usage per organization per feature. Created automatically when first used. Work as both feature guard and feature usage metering module.
+**Purpose:** Track real-time usage per organization per feature. Created automatically when first used.
 
-
+---
 
 ## Complete Setup Flow Diagram:
 
 ```
-[Feature] (1) ← [PricingPackageFeature] (n) → (1) [PricingPackage] (1) → (n) [Organization]
+[Feature] (1) ←--- [PricingPackageFeature] (n) ---→ (1) [PricingPackage] (1) ---→ (n) [Organization]
      ↓                                                              ↓
-     └-→ (n) [Metering] (1) ←┘
+     └-------------------→ (n) [Metering] (1) ←---------------------┘
                          (usage tracking)
 ```
-## Add Seats and Licencing (Optional)
-
-You can create `seats` as feature and a it pricing packages like other non crud features. 
 
 ## SuperAdmin Setup Sequence:
 
@@ -103,7 +99,6 @@ You can create `seats` as feature and a it pricing packages like other non crud 
    Package 1: name="Freemium", priceMonthly=0
    Package 2: name="Starter", priceMonthly=29  
    Package 3: name="Pro", priceMonthly=99
-   Package 4: name="Enterprise", priceMonthly=299
    ```
 
 3. **Assign Features to Packages:**
@@ -133,13 +128,12 @@ You can create `seats` as feature and a it pricing packages like other non crud 
    - When Acme Inc creates first form → `Metering` record created: `org=Acme, feature=form_create, currentValue=1`
    - When Startup LLC tries bulk email → Blocked (status=false in Freemium)
 
-
-
+---
 
 ## Critical Field Relationships:
 
 | Step | Model | Critical Fields | Purpose |
-||-|--||
+|------|-------|-----------------|---------|
 | 1 | `Feature` | `name`, `meterType`, `timeframe` | Define what can be metered |
 | 2 | `PricingPackage` | `name`, `priceMonthly` | Define product tiers |
 | 3 | `PricingPackageFeature` | `status`, `limitValue` | Set package-specific limits |

@@ -1,4 +1,4 @@
-import ModelModel from '../models/supabase/Model.js';
+import ModelModel from '../models/mysql/Model.js';
 import ModelsManifest from '../../../../lib/models_manifest.js';
 
 class ModelService {

@@ -1,6 +1,7 @@
-import MeteringModel from '../models/supabase/Metering.js';
+import MeteringModel from '../models/mysql/Metering.js';
 
 class MeteringService {
+  
   async create(data) {
     return await MeteringModel.create(data);
   }
