@@ -15,13 +15,11 @@ import getPrismaClient from '../../../../../lib/prisma.js';
 
 export default class MeteringModel {
   static async create(data) {
+      console.log("3. inside Metering logUsage");
+
     const prisma = await getPrismaClient();
     return prisma.metering.create({ 
-      data,
-      include: {
-        organization: true,
-        feature: true
-      }
+      data
     });
   }
 
@@ -41,7 +39,7 @@ static async countMonthlyUsage(organizationId, featureName) {
   const prisma = await getPrismaClient();
 
   // Ensure organizationId is a string
-  const orgId = String(organizationId);
+  const orgId = parseInt(organizationId);
 
   // Get the start and end of the current month (UTC-safe)
   const now = new Date();
@@ -70,7 +68,7 @@ static async countYearlyUsage(organizationId, featureName) {
   const prisma = await getPrismaClient();
 
   // Ensure organizationId is a string
-  const orgId = String(organizationId);
+  const orgId = parseInt(organizationId);
 
   // Get the start and end of the current year (UTC-safe)
   const now = new Date();

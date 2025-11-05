@@ -13,8 +13,10 @@ featureGuard(model, action) {
   return async (req, res, next) => {
     try {
 
+      //console.log("THERE?",req.userId);
+
       let isAllowed = false;
-      let hasCredit = false;
+      //let hasCredit = false;
       let notAlloweMessage;
       let noCreditMessage;  
 
@@ -22,7 +24,7 @@ featureGuard(model, action) {
 
       // Retrieve user data
       const userData = await UserModel.getPylonUserById(req.userId);
-      console.log('- userData:', JSON.stringify(userData,null,2));
+      //console.log('- userData:', JSON.stringify(userData,null,2));
 
         const features = Object.fromEntries(
         userData.organization.pricingPackage.features.map(f => [
@@ -36,7 +38,7 @@ featureGuard(model, action) {
         ])
       );
 
-      console.log("Feature Map:", features);
+      //console.log("Feature Map:", features);
 
         if (!userData) {
           console.log('User not found:', req.userId);
@@ -45,30 +47,42 @@ featureGuard(model, action) {
 
       // Extract user settings
       const userSettings = userData.userSettings;
-      console.log('- User Settings:', userSettings);
-      console.log('- routeFeature:', routeFeature);
+     // console.log('- User Settings:', userSettings);
+      //console.log('- routeFeature:', routeFeature);
 
       if(userSettings.includes(routeFeature)) { 
         isAllowed = true;
-        console.log("routeFeature",isAllowed);
+      //  console.log("routeFeature",isAllowed);
       } else {
         notAlloweMessage = 'You have no access to this feature'; 
       }
 
       // Check feature access or quota
-       hasCredit = this.checkCredit(userData, routeFeature, features);
-
-       if(!hasCredit) {
-        noCreditMessage = 'Quota exceeded. You need to upgrade your plan.';
+       const hasCredit = await this.checkCredit(userData, routeFeature, features);
+       //console.log("hasCredit",hasCredit);
+       if(!hasCredit.status) {
+        noCreditMessage = `${features[routeFeature]?.timeframe} Quota exceeded. You need to upgrade your plan.`;
        }
 
-       if(isAllowed && hasCredit) {
-      console.log('Feature access granted');
+       if(isAllowed && hasCredit.status) {
+      //console.log('Feature access granted');
+
+      // prepare data need to metering
+      // metering happens at controller level after succesful record creation
+      req.userData = {
+        id: userData.id,
+        organizationId: userData.organization?.id,
+        featureName: routeFeature,
+        action: action,
+      };
+      req.pylon = true; // so that in your controller 
+
          next();
        } else {
-        console.log('Quota exceeded for user:', req.userId);
+        console.log(`${features[routeFeature]?.timeframe} Quota exceeded for user:`, req.userId);
         return res.status(403).json({
-          message: `${notAlloweMessage} ${noCreditMessage}`,
+            message: `${notAlloweMessage || ''} ${noCreditMessage}`.trim(),
+
         });
 
        }
@@ -86,31 +100,61 @@ featureGuard(model, action) {
 
 
   // Helper method for feature access logic
-  checkCredit(userData, routeFeature, features) {
+async checkCredit(userData, routeFeature, features) {
   const timeframe = features[routeFeature]?.timeframe;
   const limitValue = features[routeFeature]?.limitValue;
   const status = features[routeFeature]?.status;
   const count = features[routeFeature]?.count;
 
-/// STATUS IS false we reture false regardless of count metering or not 
-  if(!status ) {
+  /// STATUS IS false we return false regardless of count metering or not 
+  if (!status) {
     return {
       status: false,
       message: 'This feature is disabled'
+    };
+  }
+
+  // if this is a count based feature
+  if (count) {
+    const usageCount = timeframe === "MONTHLY"
+      ? await MeteringModel.countMonthlyUsage(userData.organizationId, routeFeature)
+      : await MeteringModel.countYearlyUsage(userData.organizationId, routeFeature);
+
+    const credit = limitValue - usageCount;
+
+    if (credit <= 0) {
+      return {
+        status: false,
+        message: `Quota exhausted for this ${timeframe.toLowerCase()}`
+      };
+    } else {
+      // return true if credit is still available
+      return {
+        status: true,
+        remaining: credit
+      };
     }
   }
 
+  // For features that are not count-based
+  return {
+    status: true
+  };
+}
 
-const usageCount = timeframe === "MONTHLY"
-  ? await MeteringModel.countMonthlyUsage(userData.organizationId, routeFeature)
-  : await MeteringModel.countYearlyUsage(userData.organizationId, routeFeature);
 
 
-    
-    return false;
+async logUsage(data) {
+  const usageData = {
+  organizationId: parseInt(data.organizationId,10),
+  featureName: data.featureName,
+  action: data.action,
+  metadata: { userId: data.id }
+};
+
+
+return await MeteringModel.create(usageData);
   }
-
-
 
 
   async create(data) {

@@ -1,7 +1,7 @@
 import MeteringModel from '../models/mysql/Metering.js';
 
 class MeteringService {
-  
+
   async create(data) {
     return await MeteringModel.create(data);
   }
@@ -32,6 +32,7 @@ class MeteringService {
     return await MeteringModel.delete(id);
   }
 
+/*
   // Pylon-specific methods
   async getUsage(organizationId, featureId) {
     return await MeteringModel.getOrCreate(organizationId, featureId);
@@ -40,6 +41,8 @@ class MeteringService {
   async incrementUsage(organizationId, featureId, amount = 1) {
     return await MeteringModel.incrementUsage(organizationId, featureId, amount);
   }
+*/
+
 }
 
 export default new MeteringService();

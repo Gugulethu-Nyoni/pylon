@@ -10,16 +10,7 @@ class MeteringController {
     }
   }
 
-// monthlyUsage
 
-  async getMonthlyUsage(req, res) {
-    try {
-      const result = await meteringService.getMonthlyUsage(req.params);
-      res.json(result);
-    } catch (err) {
-      res.status(404).json({ error: err.message });
-    }
-  }
 
 
   async getMeteringById(req, res) {
