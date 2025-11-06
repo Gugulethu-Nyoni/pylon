@@ -21,7 +21,7 @@ featureGuard(model, action) {
       let noCreditMessage;  
 
       const routeFeature = `${model.toLowerCase()}_${action}`; // e.g., Form + create → form_create
-
+      //console.log("routeFeature",routeFeature);
       // Retrieve user data
       const userData = await UserModel.getPylonUserById(req.userId);
       //console.log('- userData:', JSON.stringify(userData,null,2));
@@ -52,7 +52,7 @@ featureGuard(model, action) {
 
       if(userSettings.includes(routeFeature)) { 
         isAllowed = true;
-      //  console.log("routeFeature",isAllowed);
+      //console.log("routeFeature",isAllowed);
       } else {
         notAlloweMessage = 'You have no access to this feature'; 
       }
@@ -61,7 +61,7 @@ featureGuard(model, action) {
        const hasCredit = await this.checkCredit(userData, routeFeature, features);
        //console.log("hasCredit",hasCredit);
        if(!hasCredit.status) {
-        noCreditMessage = `${features[routeFeature]?.timeframe} Quota exceeded. You need to upgrade your plan.`;
+        noCreditMessage = `${features[routeFeature]?.timeframe.charAt(0).toUpperCase()}${features[routeFeature]?.timeframe.slice(1).toLowerCase()} Quota exceeded. You need to upgrade your plan.`;
        }
 
        if(isAllowed && hasCredit.status) {
@@ -114,6 +114,17 @@ async checkCredit(userData, routeFeature, features) {
     };
   }
 
+
+  // If limitValue is -1, the feature is unlimited, so return true immediately.
+   
+    if (count && limitValue === -1) {
+        return {
+            status: true,
+            message: 'Unlimited access' // Optional message for clarity
+        };
+    }
+    
+
   // if this is a count based feature
   if (count) {
     const usageCount = timeframe === "MONTHLY"
@@ -121,6 +132,11 @@ async checkCredit(userData, routeFeature, features) {
       : await MeteringModel.countYearlyUsage(userData.organizationId, routeFeature);
 
     const credit = limitValue - usageCount;
+
+    //console.log("limitValue",limitValue);
+    //console.log("usageCount",limitValue);
+    //console.log("credit",credit);
+
 
     if (credit <= 0) {
       return {
@@ -141,8 +157,6 @@ async checkCredit(userData, routeFeature, features) {
     status: true
   };
 }
-
-
 
 async logUsage(data) {
   const usageData = {
