@@ -80,24 +80,6 @@ model Metering {
   @@map("meterings")
 }
 
-// Other related models (assuming they exist)
-model User {
-  id             Int            @id @default(autoincrement())
-  organizationId Int
-  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  // ... other fields
-
-  @@map("users")
-}
-
-model Form {
-  id             Int          @id @default(autoincrement())
-  organizationId Int
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  // ... other fields
-
-  @@map("forms")
-}
 
 model ApiKey {
   id             Int          @id @default(autoincrement())

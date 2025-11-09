@@ -141,3 +141,7 @@ Critical Columns:
 | 5 | `Metering` | `currentValue`, `periodStart/End` | Track real usage |
 
 This gives SuperAdmin complete control over the feature economy while keeping the runtime simple for developers.
+
+## To Do
+- Add resource based permissions
+- Create perms js to be imported in every component for scalability 
