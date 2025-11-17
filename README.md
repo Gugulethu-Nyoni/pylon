@@ -149,5 +149,6 @@ This gives SuperAdmin complete control over the feature economy while keeping th
 - Enable organisational name (after payment or before)
 - Add paypal payment gateway
 - Add paystack gateway
+- Add Yoco gateway
 
 
