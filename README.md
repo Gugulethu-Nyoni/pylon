@@ -150,5 +150,6 @@ This gives SuperAdmin complete control over the feature economy while keeping th
 - Add paypal payment gateway
 - Add paystack gateway
 - Add Yoco gateway
+- Add payment settings 
 
 
