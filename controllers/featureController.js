@@ -45,8 +45,6 @@ class FeatureController {
           throw new Error("Missing Non-CRUD Feature Name.");
         }
         
-        // Set the final required 'name' argument for Prisma
-        finalName = non_crud_name;
 
         // Set the non_crud_feature_set_name
         if (feature_set_name_options === 'add_new') {
@@ -54,6 +52,9 @@ class FeatureController {
         } else {
           finalFeatureSet = feature_set_name_options;
         }
+                // Set the final required 'name' argument for Prisma
+        finalName = `${finalFeatureSet}_${non_crud_name}`.toLowerCase();
+
       }
       
       // 3. Transform Metering Fields to Booleans

@@ -11,142 +11,110 @@ datasource db {
 }
 
 model Organization {
-  id                  Int                  @id @default(autoincrement())
-  name                String?
-  pricingPackageId    String
-  settings            Json?
-  paidPeriodStart     DateTime?
-  paidPeriodEnd       DateTime?
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-  trialEndsAt         DateTime?
-  trialStartedAt      DateTime?
-  ownerId             Int                  @unique(map: "Organization_ownerId_unique_key") @default(0)
-  owner               User                 @relation("OrganizationOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  pricingPackage      PricingPackage       @relation(fields: [pricingPackageId], references: [id])
-  apiKeys             ApiKey[]
-  packagePayments     PackagePayment[]
-  users               User[]               @relation("OrganizationMembers")
-  
-  // NEW: Add roles relation
-  roles               Role[]
+  id               Int              @id @default(autoincrement())
+  name             String
+  owner            User[]
+  pricingPackageId Int
+  pricingPackage   PricingPackage   @relation(fields: [pricingPackageId], references: [id], onDelete: Cascade)
+  settings         Json?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  forms            Form[]
+  meterings        Metering[]
+  apiKeys          ApiKey[]
 
-  // Strategic Planning Relations
-  masterPlans         MasterPlan[]
-  organizationalUnits OrganizationalUnit[]
-  reportingPeriods    ReportingPeriod[] 
-
-  // NEW: Additional contact and business information
-  contactPerson       String?              @map("contact_person")
-  email               String?
-  mobile              String?
-  website             String?              @map("website")
-  physicalAddress     String?              @map("physical_address")
-
-  @@index([pricingPackageId], map: "Organization_pricingPackageId_fkey")
   @@map("organizations")
 }
 
-
 model Feature {
-  id                        String                @id @default(uuid())
-  name                      String                @unique
-  unit                      String?
-  description               String?
-  timeframe                 Timeframe?            @default(MONTHLY)
-  count                     Boolean?
-  on_off                    Boolean?
-  non_crud                  Int?
-  non_crud_feature_set_name String?
-  isSystemFeature           Boolean               @default(false)
-  pricingPackageFeatures    PricingPackageFeature[]
+  id                     Int                      @id @default(autoincrement())
+  name                   String                   @unique
+  unit                   String
+  description            String?
+  meterType              MeterType                @default(ON_OFF)
+  timeframe              Timeframe?               @default(MONTHLY)
+  pricingPackageFeatures PricingPackageFeature[]
+  meterings              Metering[]
 
   @@map("features")
 }
 
-model PackagePayment {
-  id               String         @id @default(uuid())
-  organizationId   Int
-  pricingPackageId String
-  amount           Int
-  paymentStatus    PaymentStatus  @default(PENDING)
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  organization     Organization   @relation(fields: [organizationId], references: [id])
-  pricingPackage   PricingPackage @relation(fields: [pricingPackageId], references: [id])
-
-  @@index([organizationId], map: "package_payments_organizationId_fkey")
-  @@index([pricingPackageId], map: "package_payments_pricingPackageId_fkey")
-  @@map("package_payments")
-}
-
 model PricingPackage {
-  id                              String                  @id @default(uuid())
-  name                            String                  @unique
-  priceMonthly                    Int?
-  priceYearly                     Int?
-  isStandard                      Boolean?                @default(false)
-  pricingTableLabel               String?
-  yearlyPriceDiscountPercentage   Decimal?
-  organizations                   Organization[]
-  packagePayments                 PackagePayment[]
-  features                        PricingPackageFeature[]
+  id              Int                      @id @default(autoincrement())
+  name            String                   @unique
+  priceMonthly    Int?
+  organizations   Organization[]
+  features        PricingPackageFeature[]
 
   @@map("pricing_packages")
 }
 
 model PricingPackageFeature {
-  id               String         @id @default(uuid())
-  pricingPackageId String
-  featureId        String
+  id               Int             @id @default(autoincrement())
+  pricingPackageId Int
+  featureId        Int
   limitValue       Int?
-  status           Boolean        @default(true)
-  seats            Int?
-  feature          Feature        @relation(fields: [featureId], references: [id], onDelete: Cascade)
-  pricingPackage   PricingPackage @relation(fields: [pricingPackageId], references: [id], onDelete: Cascade)
+  status           Boolean         @default(true)
+
+  pricingPackage   PricingPackage  @relation(fields: [pricingPackageId], references: [id], onDelete: Cascade)
+  feature          Feature         @relation(fields: [featureId], references: [id], onDelete: Cascade)
 
   @@unique([pricingPackageId, featureId])
-  @@index([featureId], map: "pricing_package_features_featureId_fkey")
   @@map("pricing_package_features")
 }
 
-model Role {
-  id             String   @id @default(uuid())
+model Metering {
+  id             Int          @id @default(autoincrement())
   organizationId Int
-  name           String
-  description    String?
-  features       Json?    // Array of permission strings e.g. ['project_read', 'project_create']
-  isSystemRole   Boolean  @default(false)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  featureId      Int
+  currentValue   Int          @default(0)
+  periodStart    DateTime     @default(now())
+  periodEnd      DateTime
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  feature        Feature      @relation(fields: [featureId], references: [id], onDelete: Cascade)
 
-  @@unique([organizationId, name])
-  @@index([organizationId])
-  @@map("roles")
-}
-
-model Metering {
-  id               String   @id @default(uuid())
-  organizationId   Int
-  featureName      String
-  action           String
-  metadata         Json?
-  createdAt        DateTime @default(now())
-
+  @@unique([organizationId, featureId])
   @@map("meterings")
 }
 
-model ApiKey {
-  id             String       @id @default(uuid())
+// Other related models (assuming they exist)
+model User {
+  id             Int            @id @default(autoincrement())
   organizationId Int
-  keyPrefix      String       @unique
-  hashedKey      String
-  permissions    Json?
-  createdAt      DateTime     @default(now())
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  // ... other fields
 
-  @@index([organizationId], map: "api_keys_organizationId_fkey")
+  @@map("users")
+}
+
+model Form {
+  id             Int          @id @default(autoincrement())
+  organizationId Int
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  // ... other fields
+
+  @@map("forms")
+}
+
+model ApiKey {
+  id             Int          @id @default(autoincrement())
+  organizationId Int
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  // ... other fields
+
   @@map("api_keys")
+}
+
+enum MeterType {
+  COUNT
+  ON_OFF
+}
+
+enum Timeframe {
+  MONTHLY
+  YEARLY
+  FOREVER
 }
