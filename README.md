@@ -151,5 +151,6 @@ This gives SuperAdmin complete control over the feature economy while keeping th
 - Add Yoco gateway
 - Add payment settings 
 - Add different payment gateways
+- Pull features from roles in AddUser 
 
 
