@@ -127,6 +127,7 @@ Critical Columns:
 5. **Metering auto-creation:**
    - When Acme Inc creates first form → `Metering` record created: `org=Acme, feature=form_create, currentValue=1`
    - When Startup LLC tries bulk email → Blocked (status=false in Freemium)
+   - Use -1 to indicate unlimited usage for a feature
 
 ---
 
