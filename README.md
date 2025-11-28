@@ -128,6 +128,7 @@ Critical Columns:
    - When Acme Inc creates first form → `Metering` record created: `org=Acme, feature=form_create, currentValue=1`
    - When Startup LLC tries bulk email → Blocked (status=false in Freemium)
    - Use -1 to indicate unlimited usage for a feature
+   - for CRUD read features - use -1 as the limit value if you don't want to limit reading of records for CRUD models
 
 ---
 
