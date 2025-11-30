@@ -13,7 +13,6 @@ class RoleService {
     return await RoleModel.findAll();
   }
 
-  // ACCEPT THE PARAMETER
 async getOrganizationRoles(organizationId) {
     // PASS IT TO THE MODEL
     return await RoleModel.getOrganizationRoles(organizationId); 

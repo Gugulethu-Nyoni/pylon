@@ -127,8 +127,6 @@ Critical Columns:
 5. **Metering auto-creation:**
    - When Acme Inc creates first form → `Metering` record created: `org=Acme, feature=form_create, currentValue=1`
    - When Startup LLC tries bulk email → Blocked (status=false in Freemium)
-   - Use -1 to indicate unlimited usage for a feature
-   - for CRUD read features - use -1 as the limit value if you don't want to limit reading of records for CRUD models and non crud models
 
 ---
 
@@ -143,16 +141,3 @@ Critical Columns:
 | 5 | `Metering` | `currentValue`, `periodStart/End` | Track real usage |
 
 This gives SuperAdmin complete control over the feature economy while keeping the runtime simple for developers.
-
-## To Do
-- Add resource based and user level permissions
-- Create perms js to be imported in every component for scalability 
-- Enable organisational name (after payment or before)
-- Add paypal payment gateway
-- Add paystack gateway
-- Add Yoco gateway
-- Add payment settings 
-- Add different payment gateways
-- Pull features from roles in AddUser 
-
-

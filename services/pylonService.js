@@ -1,5 +1,5 @@
 import PylonModel from '../models/mysql/Pylon.js';
-import UserModel from '../../../../models/mysql/User.js';
+import UserModel from '../models/mysql/User.js';
 import MeteringModel from '../models/mysql/Metering.js';
 
 

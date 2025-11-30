@@ -1,7 +1,6 @@
 import OrganizationModel from '../models/mysql/Organization.js';
 import PricingPackageModel from '../models/mysql/PricingPackage.js';
-//
-import UserModel from '../../../../models/mysql/User.js';
+import UserModel from '../models/mysql/User.js';
 
 
 
