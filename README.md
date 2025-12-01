@@ -141,3 +141,245 @@ Critical Columns:
 | 5 | `Metering` | `currentValue`, `periodStart/End` | Track real usage |
 
 This gives SuperAdmin complete control over the feature economy while keeping the runtime simple for developers.
+
+# Pylon Commands Reference
+
+## Pylon Route Management
+
+### Create Pylon Route
+Creates a role-based route with Pylon dashboard layout structure.
+
+**Syntax:**
+```bash
+semantq make:route <routeName> <role> --pylon
+```
+
+**Examples:**
+```bash
+# Create a plan route for project-manager role
+semantq make:route plan project-manager --pylon
+
+# Create a user-add route for admin role (short flag)
+semantq make:route user-add admin -p
+
+# Create with server handlers
+semantq make:route master-plan project-manager --pylon -A
+```
+
+**What it creates:**
+- `src/routes/<role>/<routeName>/@page.smq` - Main route page with component imports
+- `src/routes/<role>/<routeName>/@layout.smq` - Dashboard layout with CSS imports
+
+
+**Key Features:**
+- Automatically converts route names to PascalCase (e.g., `user-add` → `UserAdd`)
+- Sets up dashboard container with Sidebar, Header, and Footer imports
+- Includes dashboard CSS and required external stylesheets
+- Enables authentication by default in config
+
+### Remove Route
+Removes an existing route directory and all its contents.
+
+**Syntax:**
+```bash
+semantq remove:route <routeName>
+```
+
+**Options:**
+- `-y, --yes`: Skip confirmation prompt
+
+**Example:**
+```bash
+# Remove a route with confirmation
+semantq remove:route contact
+
+# Remove without confirmation
+semantq remove:route about -y
+```
+
+**Notes:**
+- Works for both regular routes and Pylon routes
+- Shows all files that will be removed before deletion
+- Requires confirmation unless `-y` flag is used
+
+---
+
+## Pylon Component Management
+
+### Create Pylon Component
+Creates a Pylon-enabled component with feature guarding and permission-based UI.
+
+**Syntax:**
+```bash
+semantq make:component <componentName> --pylon
+```
+
+**Examples:**
+```bash
+# Create a basic Pylon component
+semantq make:component Plan --pylon
+
+# Create nested Pylon component
+semantq make:component admin/User --pylon
+```
+
+**What it creates:**
+- `src/components/pylon/<componentName>.smq` (or nested path)
+- Includes complete permission system with `can()`, `canAny()`, `canAll()` functions
+- Formique configuration for CRUD operations
+- AnyGrid integration with permission-controlled features
+- Loading states and error handling
+- Accordion-based UI for create/view operations
+
+**Key Features:**
+- Automatic permission mapping from user settings
+- State management with `$state` and `$effect`
+- Integrated Formique forms with validation
+- AnyGrid data tables with export permissions
+- Role-based access control
+- Automatic data refresh on record creation
+
+### Remove Component
+Removes a component file from the project.
+
+**Syntax:**
+```bash
+semantq remove:component <componentName>
+```
+
+**Options:**
+- `-p, --pylon`: Remove from Pylon components directory
+- `-y, --yes`: Skip confirmation prompt
+
+**Examples:**
+```bash
+# Remove regular component
+semantq remove:component Button
+
+# Remove Pylon component
+semantq remove:component Plan --pylon
+
+# Remove without confirmation
+semantq remove:component User -p -y
+```
+
+**Notes:**
+- Defaults to regular components directory
+- Use `--pylon` flag for Pylon components
+- Shows alternative location suggestions if not found
+
+---
+
+## Pylon Resource Management
+
+### Create Pylon Resource
+Generates a complete backend resource with Pylon feature guarding.
+
+**Syntax:**
+```bash
+semantq make:resource <resourceName> --pylon
+```
+
+**Examples:**
+```bash
+# Create Pylon resource for User model
+semantq make:resource User --pylon
+
+# Create regular resource (non-Pylon)
+semantq make:resource Product
+```
+
+**What it creates:**
+- **Model**: Database model with Pylon permission fields
+- **Controller**: CRUD operations with permission checks
+- **Service**: Business logic layer
+- **Routes**: API endpoints with middleware
+
+**Key Features:**
+- Database adapter-aware (MySQL, MongoDB, SQLite, Supabase)
+- Automatic Pylon permission integration in controllers
+- Feature flag system for SaaS capabilities
+- Role-based access middleware
+- Consistent naming conventions
+
+### Remove Resource
+Removes all backend resource files for a given resource.
+
+**Syntax:**
+```bash
+semantq remove:resource <resourceName>
+```
+
+**Options:**
+- `-y, --yes`: Skip confirmation prompt
+
+**Example:**
+```bash
+# Remove User resource with confirmation
+semantq remove:resource User
+
+# Remove without confirmation
+semantq remove:resource Product -y
+```
+
+**What it removes:**
+- Model files across all database adapters
+- Controller file
+- Service file
+- Route file
+
+**Notes:**
+- Only removes files that exist
+- Shows list of files before deletion
+- Requires server directory (`semantqQL`) to exist
+
+---
+
+## Common Workflow Example
+
+### Complete Pylon Feature Creation
+```bash
+# 1. Create the backend resource
+semantq make:resource Invoice --pylon
+
+# 2. Create the Pylon component
+semantq make:component Invoice --pylon
+
+# 3. Create the route for admin role
+semantq make:route invoice admin --pylon
+```
+
+This creates:
+- Backend: `Invoice` model, controller, service, routes
+- Frontend: `Invoice.smq` Pylon component with permission UI
+- Route: `/admin/invoice` dashboard route
+
+### Cleanup Example
+```bash
+# Remove everything
+semantq remove:resource Invoice -y
+semantq remove:component Invoice --pylon -y
+semantq remove:route invoice -y
+```
+
+## Notes & Best Practices
+
+1. **Naming Conventions:**
+   - Routes: lowercase, hyphenated (e.g., `user-add`)
+   - Components: PascalCase (e.g., `UserAdd`)
+   - Resources: Singular, PascalCase (e.g., `User`)
+
+2. **Directory Structure:**
+   - Pylon components: `src/components/pylon/`
+   - Pylon routes: `src/routes/<role>/`
+   - Resources: `semantqQL/` (models, controllers, services, routes)
+
+3. **Permission System:**
+   - Uses `user.userSettings` Set for permission checks
+   - Supports CRUD operations (`create`, `read`, `update`, `delete`)
+   - Includes DataGrid features (`datagrid_csvexport`, `datagrid_excelexport`)
+
+4. **File Generation:**
+   - All commands check for existing files first
+   - Provide helpful error messages for conflicts
+   - Include clear "next steps" after creation
