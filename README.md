@@ -383,3 +383,7 @@ semantq remove:route invoice -y
    - All commands check for existing files first
    - Provide helpful error messages for conflicts
    - Include clear "next steps" after creation
+
+   ## TO Do
+- Add Pricing Table Friendly formatting of features
+- structure for non crud features
