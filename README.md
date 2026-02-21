@@ -387,3 +387,4 @@ semantq remove:route invoice -y
    ## TO Do
 - Add Pricing Table Friendly formatting of features
 - structure for non crud features
+- Implement option to create and all CRUD features in one form api - instead of doign these one by one
