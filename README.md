@@ -4,6 +4,10 @@ Feature Guard Package for SaaS Applications – A comprehensive solution that en
 
 ## SuperAdmin Setup Flow: Theoretical Model Relationships
 
+
+Redo 
+
+
 ### **Step 1: Define Features (Foundation)**
 **Model: `Feature`**
 ```
@@ -30,8 +34,6 @@ Critical Columns:
 ```
 
 **Purpose:** Define the subscription tiers available to organizations.
-
-
 
 ### **Step 3: Connect Features to Packages (Feature Gates)**
 **Model: `PricingPackageFeature`** (Junction Table)
@@ -387,4 +389,4 @@ semantq remove:route invoice -y
    ## TO Do
 - Add Pricing Table Friendly formatting of features
 - structure for non crud features
-- Implement option to create and all CRUD features in one form api - instead of doign these one by one
+- Implement option to create and all CRUD features in one form api - instead of doing these one by one
