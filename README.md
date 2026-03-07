@@ -5,8 +5,11 @@ Feature Guard Package for SaaS Applications – A comprehensive solution that en
 ## SuperAdmin Setup Flow: Theoretical Model Relationships
 
 
-Redo 
+## Run the init command 
 
+```
+npm run init
+```
 
 ### **Step 1: Define Features (Foundation)**
 **Model: `Feature`**
