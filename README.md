@@ -5,11 +5,13 @@ Feature Guard Package for SaaS Applications – A comprehensive solution that en
 ## SuperAdmin Setup Flow: Theoretical Model Relationships
 
 
-## Run the init command 
+## Run the init command to generate the models manifest
 
 ```
 npm run init
 ```
+
+
 
 ### **Step 1: Define Features (Foundation)**
 **Model: `Feature`**
