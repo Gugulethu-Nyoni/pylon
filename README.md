@@ -7,6 +7,7 @@ Feature Guard Package for SaaS Applications – A comprehensive solution that en
 
 ## Run the init command to generate the models manifest
 
+cd semantqQL then run command below: 
 ```
 npm run init
 ```
