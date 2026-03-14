@@ -26,7 +26,7 @@ Critical Columns:
 - description → "Monthly form creation limit"
 ```
 
-**Purpose:** Catalog of all possible billable features in the system.
+**Purpose:** Catalog and fine grained control over all possible billable features in the system.
 
 
 
