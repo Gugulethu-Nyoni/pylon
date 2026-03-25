@@ -1,5 +1,5 @@
 # Pylon
-Feature Guard Package for SaaS Applications – A comprehensive solution that enables you to define and manage features, bundle them into pricing tiers, and implement usage metering to track feature consumption accurately.
+Feature Guard and feature metering Package for SaaS Applications – A comprehensive solution that enables you to define and manage features, bundle them into pricing tiers, and implement usage metering to track feature consumption accurately.
 
 
 ## SuperAdmin Setup Flow: Theoretical Model Relationships
