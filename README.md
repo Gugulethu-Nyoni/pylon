@@ -28,6 +28,7 @@ Critical Columns:
 
 **Purpose:** Catalog and fine grained control over all possible billable features in the system.
 
+You can create CRUD and NON CRUD features and then package these as pricicing packages. 
 
 
 ### **Step 2: Create Pricing Packages (Product Tiers)**
