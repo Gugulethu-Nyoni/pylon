@@ -28,6 +28,15 @@ class ModelController {
     }
   }
 
+  async getAllNonCrudModels(req, res) {
+    try {
+      const result = await modelService.getAllNonCrudModels();
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+
   async updateModel(req, res) {
     try {
       // Parse ID from string to integer (for sqlite/mysql; mongo uses string IDs)

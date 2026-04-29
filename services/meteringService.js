@@ -1,4 +1,4 @@
-import MeteringModel from '../models/mysql/Metering.js';
+import MeteringModel from '../models/postgresql/Metering.js';
 
 class MeteringService {
 

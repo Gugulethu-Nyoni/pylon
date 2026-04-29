@@ -1,6 +1,6 @@
-import PylonModel from '../models/mysql/Pylon.js';
-import UserModel from '../models/mysql/User.js';
-import MeteringModel from '../models/mysql/Metering.js';
+import PylonModel from '../models/postgresql/Pylon.js';
+import UserModel from '../models/postgresql/User.js';
+import MeteringModel from '../models/postgresql/Metering.js';
 
 
 class PylonService {

@@ -1,4 +1,4 @@
-import UserModel from '../models/mysql/User.js';
+import UserModel from '../models/postgresql/User.js';
 
 class UserService {
   async create(data) {

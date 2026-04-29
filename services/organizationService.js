@@ -1,6 +1,6 @@
-import OrganizationModel from '../models/mysql/Organization.js';
-import PricingPackageModel from '../models/mysql/PricingPackage.js';
-import UserModel from '../models/mysql/User.js';
+import OrganizationModel from '../models/postgresql/Organization.js';
+import PricingPackageModel from '../models/postgresql/PricingPackage.js';
+import UserModel from '../models/postgresql/User.js';
 
 
 

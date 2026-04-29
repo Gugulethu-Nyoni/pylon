@@ -1,18 +1,8 @@
-# Pylon
-Feature Guard and feature metering Package for SaaS Applications – A comprehensive solution that enables you to define and manage features, bundle them into pricing tiers, and implement usage metering to track feature consumption accurately.
+# pylon
+Feature Guard Package For SaaS Aaplications
 
 
 ## SuperAdmin Setup Flow: Theoretical Model Relationships
-
-
-## Run the init command to generate the models manifest
-
-cd semantqQL then run command below: 
-```
-npm run init
-```
-
-
 
 ### **Step 1: Define Features (Foundation)**
 **Model: `Feature`**
@@ -26,10 +16,9 @@ Critical Columns:
 - description → "Monthly form creation limit"
 ```
 
-**Purpose:** Catalog and fine grained control over all possible billable features in the system.
+**Purpose:** Catalog of all possible billable features in the system.
 
-You can create CRUD and NON CRUD features and then package these as pricicing packages. Features can be role based. 
-
+---
 
 ### **Step 2: Create Pricing Packages (Product Tiers)**
 **Model: `PricingPackage`**
@@ -41,6 +30,8 @@ Critical Columns:
 ```
 
 **Purpose:** Define the subscription tiers available to organizations.
+
+---
 
 ### **Step 3: Connect Features to Packages (Feature Gates)**
 **Model: `PricingPackageFeature`** (Junction Table)
@@ -54,7 +45,7 @@ Critical Columns:
 
 **Purpose:** Define exactly what features each pricing package includes and their limits.
 
-
+---
 
 ### **Step 4: Assign Organizations to Packages**
 **Model: `Organization`**
@@ -66,7 +57,7 @@ Critical Columns:
 
 **Purpose:** Connect each customer organization to their subscription tier.
 
-
+---
 
 ### **Step 5: Automatic Metering Creation (Runtime)**
 **Model: `Metering`**
@@ -81,14 +72,14 @@ Critical Columns:
 
 **Purpose:** Track real-time usage per organization per feature. Created automatically when first used.
 
-
+---
 
 ## Complete Setup Flow Diagram:
 
 ```
-[Feature] (1) ← [PricingPackageFeature] (n) → (1) [PricingPackage] (1) → (n) [Organization]
+[Feature] (1) ←--- [PricingPackageFeature] (n) ---→ (1) [PricingPackage] (1) ---→ (n) [Organization]
      ↓                                                              ↓
-     └-→ (n) [Metering] (1) ←┘
+     └-------------------→ (n) [Metering] (1) ←---------------------┘
                          (usage tracking)
 ```
 
@@ -137,12 +128,12 @@ Critical Columns:
    - When Acme Inc creates first form → `Metering` record created: `org=Acme, feature=form_create, currentValue=1`
    - When Startup LLC tries bulk email → Blocked (status=false in Freemium)
 
-
+---
 
 ## Critical Field Relationships:
 
 | Step | Model | Critical Fields | Purpose |
-||-|--||
+|------|-------|-----------------|---------|
 | 1 | `Feature` | `name`, `meterType`, `timeframe` | Define what can be metered |
 | 2 | `PricingPackage` | `name`, `priceMonthly` | Define product tiers |
 | 3 | `PricingPackageFeature` | `status`, `limitValue` | Set package-specific limits |
@@ -211,7 +202,7 @@ semantq remove:route about -y
 - Shows all files that will be removed before deletion
 - Requires confirmation unless `-y` flag is used
 
-
+---
 
 ## Pylon Component Management
 
@@ -277,7 +268,7 @@ semantq remove:component User -p -y
 - Use `--pylon` flag for Pylon components
 - Shows alternative location suggestions if not found
 
-
+---
 
 ## Pylon Resource Management
 
@@ -342,7 +333,7 @@ semantq remove:resource Product -y
 - Shows list of files before deletion
 - Requires server directory (`semantqQL`) to exist
 
-
+---
 
 ## Common Workflow Example
 
@@ -392,8 +383,3 @@ semantq remove:route invoice -y
    - All commands check for existing files first
    - Provide helpful error messages for conflicts
    - Include clear "next steps" after creation
-
-   ## TO Do
-- Add Pricing Table Friendly formatting of features
-- structure for non crud features
-- Implement option to create and all CRUD features in one form api - instead of doing these one by one

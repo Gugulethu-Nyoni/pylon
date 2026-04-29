@@ -1,8 +1,9 @@
-import PricingPackageFeatureModel from '../models/mysql/PricingPackageFeature.js';
+import PricingPackageFeatureModel from '../models/postgresql/PricingPackageFeature.js';
 
 class PricingPackageFeatureService {
   async create(data) {
-    // Check if relation already exists
+  // For single mode, check duplicates
+  if (data.feature_adding_mode === 'single') {
     const existing = await PricingPackageFeatureModel.findByPackageAndFeature(
       data.pricingPackageId,
       data.featureId
@@ -10,8 +11,11 @@ class PricingPackageFeatureService {
     if (existing) {
       throw new Error('Feature already exists in this pricing package');
     }
-    return await PricingPackageFeatureModel.create(data);
   }
+  
+  // Pass the full data including mode to the model
+  return await PricingPackageFeatureModel.create(data);
+}
 
   async getById(id) {
     const ppf = await PricingPackageFeatureModel.findById(id);

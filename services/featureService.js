@@ -1,4 +1,4 @@
-import FeatureModel from '../models/mysql/Feature.js';
+import FeatureModel from '../models/postgresql/Feature.js';
 
 class FeatureService {
   async create(data) {

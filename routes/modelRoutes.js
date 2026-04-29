@@ -2,8 +2,8 @@ import express from 'express';
 import modelController from '../controllers/modelController.js';
 // Import authentication and authorization middleware
 import { validateApiKey } from '../../../../middleware/validateApiKey.js';
-import { authenticateToken } from '@semantq/auth/lib/middleware/authMiddleware.js';
-import { authorize } from '@semantq/auth/lib/middleware/authorize.js';
+import { authenticateToken } from '../../../@semantq/auth/lib/middleware/authMiddleware.js';
+import { authorize } from '../../../@semantq/auth/lib/middleware/authorize.js';
 
 const router = express.Router();
 
@@ -21,6 +21,7 @@ const router = express.Router();
 
 // 🟡 AUTHENTICATED - Logged-in users only
 router.get('/model/models', modelController.getAllModels);
+router.get('/model/models/non_crud', modelController.getAllNonCrudModels);
 router.get('/model/models/:id', authenticateToken, modelController.getModelById);
 router.post('/model/models', authenticateToken, modelController.createModel);
 router.put('/model/models/:id', authenticateToken, modelController.updateModel);

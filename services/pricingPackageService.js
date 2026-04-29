@@ -1,4 +1,4 @@
-import PricingPackageModel from '../models/mysql/PricingPackage.js';
+import PricingPackageModel from '../models/postgresql/PricingPackage.js';
 
 class PricingPackageService {
   

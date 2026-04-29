@@ -1,4 +1,4 @@
-import RoleModel from '../models/mysql/Role.js';
+import RoleModel from '../models/postgresql/Role.js';
 
 class RoleService {
   async create(data) {

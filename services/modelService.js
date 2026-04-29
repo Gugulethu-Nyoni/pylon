@@ -1,5 +1,6 @@
-import ModelModel from '../models/mysql/Model.js';
+import ModelModel from '../models/postgresql/Model.js';
 import ModelsManifest from '../../../../lib/models_manifest.js';
+import NonCrudModelsManifest from '../../../../lib/non_crud_models_manifest.js';
 
 class ModelService {
   async create(data) {
@@ -13,6 +14,11 @@ class ModelService {
   async getAll() {
     //return await ModelModel.findAll();
     return ModelsManifest;
+  }
+
+  async getAllNonCrudModels() {
+    //return await ModelModel.findAll();
+    return NonCrudModelsManifest;
   }
 
   async update(id, data) {
