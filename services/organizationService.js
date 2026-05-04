@@ -2,13 +2,13 @@ import OrganizationModel from '../models/postgresql/Organization.js';
 import PricingPackageModel from '../models/postgresql/PricingPackage.js';
 import UserModel from '../models/postgresql/User.js';
 
-
-
 class OrganizationService {
+  /**
+   * Creates an organization and sets initial subscription state.
+   */
   async create(data) {
-    const { name, pricingPackageId, ownerId } = data;
+    const { pricingPackageId, ownerId } = data;
     
-    // Get pricing package details
     const pricingPackage = await PricingPackageModel.findById(pricingPackageId);
     
     if (!pricingPackage) {
@@ -18,31 +18,68 @@ class OrganizationService {
     const now = new Date();
     let finalData = { ...data };
 
-    // Check if it's a free package (both prices are 0 or less than 1)
     const isFreePackage = 
       (!pricingPackage.priceMonthly || pricingPackage.priceMonthly < 1) && 
       (!pricingPackage.priceYearly || pricingPackage.priceYearly < 1);
 
     if (isFreePackage) {
-      // For free packages, activate immediately with 1-year period
+      // Free packages get 1 year of access immediately
       finalData.paidPeriodStart = now;
       finalData.paidPeriodEnd = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
-      
-      console.log('Creating free package with automatic activation');
+      console.log(`[OrgService] Creating free package for ${data.name}. Access granted until ${finalData.paidPeriodEnd}`);
     } else {
-      // For paid packages, set trial period (30 days)
+      // Paid packages start with a 30-day trial
       finalData.trialStartedAt = now;
-      finalData.trialEndsAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
-      
-      console.log('Creating paid package with trial period');
+      finalData.trialEndsAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); 
+      console.log(`[OrgService] Creating paid package for ${data.name}. Trial ends: ${finalData.trialEndsAt}`);
     }
 
-    // Create the organization
     const organization = await OrganizationModel.create(finalData);
-    const userUpdate = await UserModel.updateOrgId(organization.ownerId, organization.id); 
-    //console.log("organization data",organization);
+    
+    // Ensure the owner is linked to the new organization
+    if (organization.ownerId && organization.id) {
+      await UserModel.updateOrgId(organization.ownerId, organization.id); 
+    }
 
     return organization;
+  }
+
+  /**
+   * Activate or Extend Subscription
+   * Triggered by the PaymentController. 
+   * Uses 'billingCycle' to determine duration and stacks onto existing time.
+   */
+  async activateSubscription(organizationId, packageId, billingCycle = 'MONTHLY') {
+    const org = await OrganizationModel.findById(organizationId);
+    if (!org) throw new Error('Organization not found for activation.');
+
+    const now = new Date();
+    let newExpiry;
+
+    /**
+     * Logic: Stacking Subscriptions
+     * If paidPeriodEnd is in the future, we stack. Otherwise, we start from now.
+     */
+    const currentExpiry = org.paidPeriodEnd && new Date(org.paidPeriodEnd) > now 
+      ? new Date(org.paidPeriodEnd) 
+      : now;
+
+    newExpiry = new Date(currentExpiry);
+
+    if (billingCycle.toUpperCase() === 'YEARLY') {
+      newExpiry.setFullYear(newExpiry.getFullYear() + 1);
+    } else {
+      newExpiry.setMonth(newExpiry.getMonth() + 1);
+    }
+
+    console.log(`[Subscription] Activating ${organizationId}. Cycle: ${billingCycle}. New Expiry: ${newExpiry.toISOString()}`);
+
+    // Update the organization using schema-valid fields
+    return await OrganizationModel.update(organizationId, {
+      pricingPackageId: packageId,
+      paidPeriodStart: now,
+      paidPeriodEnd: newExpiry
+    });
   }
 
   async getById(id) {

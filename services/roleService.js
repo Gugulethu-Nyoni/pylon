@@ -9,6 +9,10 @@ class RoleService {
     return await RoleModel.findById(id);
   }
 
+  async getByOrgId(orgId) {
+    return await RoleModel.findByOrgId(orgId);
+  }
+
   async getAll() {
     return await RoleModel.findAll();
   }

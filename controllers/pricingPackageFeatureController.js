@@ -7,7 +7,6 @@ class PricingPackageFeatureController {
     console.log('📥 [CONTROLLER START] Raw Request Body:', JSON.stringify(req.body, null, 2));
 
     const { 
-      seats, 
       pricingPackageId, 
       featureId, 
       limitValue, 
@@ -27,9 +26,7 @@ class PricingPackageFeatureController {
       featureSet
     };
     
-    if (seats) {
-      finalData.seats = parseInt(seats, 10);
-    }
+    
 
     // 🔍 DEBUG: Log the data being sent to the service layer
     console.log('📤 [CONTROLLER] Passing to Service:', {

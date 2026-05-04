@@ -1,5 +1,5 @@
 # pylon
-Feature guard, metering and pricing module for full stack semantq SaaS Applications
+Feature Guard Package For SaaS Aaplications
 
 
 ## SuperAdmin Setup Flow: Theoretical Model Relationships

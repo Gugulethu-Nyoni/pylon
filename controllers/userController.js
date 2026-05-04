@@ -1,39 +1,42 @@
+// pylon/controllers/userController.js
 import userService from '../services/userService.js';
 
 class UserController {
   async createUser(req, res) {
     try {
-      const result = await userService.create(req.body);
+      let result;
+      
+      // If request came through Pylon feature guard, use metered creation
+      if (req.pylon) {
+        result = await userService.create(req);
+      } else {
+        // Direct creation (personal account or non-Pylon route)
+        result = await userService.createDirect(req.body);
+      }
+      
       res.status(201).json(result);
     } catch (err) {
       res.status(400).json({ error: err.message });
     }
   }
 
-
   async getUserPlan(req, res) {
     try {
-      const result = await userService.getUserPlan(req.params.id);
+      const result = await userService.getUserPlan(req.params.userId);
       res.json(result);
     } catch (err) {
       res.status(404).json({ error: err.message });
     }
   }
 
-
-  // getOrganizationUsers
-
-async getOrganizationUsers(req, res) {
+  async getOrganizationUsers(req, res) {
     try {
-      //console.log("REQ",req.params.organizationId);
       const result = await userService.getOrganizationUsers(req.params.organizationId);
       res.json(result);
     } catch (err) {
       res.status(404).json({ error: err.message });
     }
   }
-
-
 
   async getUserById(req, res) {
     try {
@@ -55,10 +58,8 @@ async getOrganizationUsers(req, res) {
 
   async updateUser(req, res) {
     try {
-      // Parse ID from string to integer (for sqlite/mysql; mongo uses string IDs)
       const resourceId = parseInt(req.params.id, 10);
 
-      // Validate parsed ID
       if (isNaN(resourceId)) {
         return res.status(400).json({ error: 'Invalid User ID provided. Must be a number.' });
       }
@@ -72,10 +73,8 @@ async getOrganizationUsers(req, res) {
 
   async deleteUser(req, res) {
     try {
-      // Parse ID from string to integer (for sqlite/mysql; mongo uses string IDs)
       const resourceId = parseInt(req.params.id, 10);
 
-      // Validate parsed ID
       if (isNaN(resourceId)) {
         return res.status(400).json({ error: 'Invalid User ID provided. Must be a number.' });
       }
@@ -88,6 +87,92 @@ async getOrganizationUsers(req, res) {
       } else {
         res.status(400).json({ error: err.message });
       }
+    }
+  }
+
+  async updateUserRole(req, res) {
+    try {
+      const { id } = req.params;
+      const { roleId, organizationId } = req.body;
+      
+      const result = await userService.updateUserRole(id, organizationId, roleId);
+      res.json(result);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  }
+
+  async adminDeleteUser(req, res) {
+    try {
+      const { id } = req.params;
+      await userService.delete(id);
+      res.status(204).send();
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  }
+
+  async bulkCreateUsers(req, res) {
+    try {
+      const { users } = req.body;
+      const results = [];
+      
+      for (const user of users) {
+        const result = await userService.createDirect(user);
+        results.push(result);
+      }
+      
+      res.status(201).json({ users: results });
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  }
+
+  async getSystemUserStats(req, res) {
+    try {
+      const stats = await userService.getSystemUserStats();
+      res.json(stats);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+
+  async systemCreateUser(req, res) {
+    try {
+      const result = await userService.systemCreateUser(req.body);
+      res.status(201).json(result);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  }
+
+  async systemDeleteUser(req, res) {
+    try {
+      const { id } = req.params;
+      await userService.systemDeleteUser(id);
+      res.status(204).send();
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  }
+
+  async getSeatStats(req, res) {
+    try {
+      const { organizationId } = req.params;
+      const result = await userService.getSeatStats(organizationId);
+      res.json(result);
+    } catch (err) {
+      res.status(404).json({ error: err.message });
+    }
+  }
+
+  async removeUserFromOrganization(req, res) {
+    try {
+      const { organizationId, userId } = req.params;
+      await userService.removeUserFromOrganization(userId, organizationId);
+      res.json({ message: 'User removed from organization successfully' });
+    } catch (err) {
+      res.status(400).json({ error: err.message });
     }
   }
 }

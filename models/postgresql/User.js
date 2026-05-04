@@ -20,30 +20,37 @@ export default class UserModel {
    * @returns {Promise<object>} The created user object.
    */
   static async create(data) {
-    const prisma = await getPrismaClient(); // Get the initialized Prisma client
+    const prisma = await getPrismaClient();
     return prisma.user.create({ data });
   }
 
+  /**
+   * Finds a user by email address
+   * @param {string} email - The email address to search for
+   * @returns {Promise<object|null>} The found user object, or null if not found
+   */
+  static async findByEmail(email) {
+    const prisma = await getPrismaClient();
+    return prisma.user.findFirst({
+      where: { email: email }
+    });
+  }
 
   /**
-     * Updates a user's organization ID (orgId) field.
-     * @param {number | string} userId - The ID of the user to update.
-     * @param {number | string} organizationId - The ID of the organization to link.
-     * @returns {Promise<object>} The updated user object.
-     */
-    static async updateOrgId(userId, organizationId) {
-
-        const prisma = await getPrismaClient(); // Get the initialized Prisma client
-        
-        // This assumes your User model has a field named 'organizationId' or similar
-        // and that 'id' in the where clause refers to the User's ID.
-        return prisma.user.update({
-            where: { id: userId },
-            data: { 
-                organizationId: organizationId // CRITICAL: Provide the field name and data
-            },
-        });
-    }
+   * Updates a user's organization ID (orgId) field.
+   * @param {number | string} userId - The ID of the user to update.
+   * @param {number | string} organizationId - The ID of the organization to link.
+   * @returns {Promise<object>} The updated user object.
+   */
+  static async updateOrgId(userId, organizationId) {
+    const prisma = await getPrismaClient();
+    return prisma.user.update({
+      where: { id: userId },
+      data: { 
+        organizationId: organizationId
+      },
+    });
+  }
 
   /**
    * Finds a user by its unique ID.
@@ -51,61 +58,108 @@ export default class UserModel {
    * @returns {Promise<object|null>} The found user object, or null if not found.
    */
   static async findById(id) {
-    const prisma = await getPrismaClient(); // Get the initialized Prisma client
+    const prisma = await getPrismaClient();
     return prisma.user.findUnique({ where: { id } });
   }
 
-/*
-    static async findByUuid(uuid) {
-    const prisma = await getPrismaClient(); // Get the initialized Prisma client
-    return prisma.user.findFirst({ where: { uuid } });
-  }
-*/
-
-
-static async getPylonUserById(id) {
-  const prisma = await getPrismaClient();
-  
-  return prisma.user.findUnique({
-    where: { id },
-    include: {
-      organization: {
-        include: {
-          pricingPackage: {
-            include: {
-              features: {
-                include: {
-                  feature: true
+  /**
+   * Gets user with full organization and pricing package details
+   * @param {number|string} id - The ID of the user to find
+   * @returns {Promise<object|null>} The found user object with relations
+   */
+  static async getPylonUserById(id) {
+    const prisma = await getPrismaClient();
+    return prisma.user.findUnique({
+      where: { id: parseInt(id, 10) },
+      include: {
+        organization: {
+          include: {
+            pricingPackage: {
+              include: {
+                features: {
+                  include: {
+                    feature: true
+                  }
                 }
               }
             }
           }
         }
       }
-    }
-  });
-}  
+    });
+  }
+
+  /**
+   * Gets user plan features (alias for getPylonUserById)
+   * @param {number|string} id - The ID of the user to find
+   * @returns {Promise<object|null>} The found user object with relations
+   */
+  static async getUserPlanFeatures(id) {
+    return this.getPylonUserById(id);
+  }
+
+  /**
+   * Counts number of users in an organization
+   * @param {number|string} organizationId - The organization ID
+   * @returns {Promise<number>} Count of users
+   */
+  static async countOrganizationUsers(organizationId) {
+    const prisma = await getPrismaClient();
+    return prisma.user.count({
+      where: { 
+        organizationId: parseInt(organizationId, 10)
+      }
+    });
+  }
+
+  /**
+   * Gets organization with seat feature from pricing package
+   * @param {number|string} organizationId - The organization ID
+   * @returns {Promise<object|null>} Organization with pricing package and seat feature
+   */
+  static async getOrganizationWithSeatFeature(organizationId) {
+    const prisma = await getPrismaClient();
+    return prisma.organization.findUnique({
+      where: { id: parseInt(organizationId, 10) },
+      include: {
+        pricingPackage: {
+          include: {
+            features: {
+              where: {
+                feature: { name: 'seats' }
+              },
+              include: {
+                feature: true
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
   /**
    * Retrieves all users from the database.
    * @returns {Promise<Array<object>>} An array of all user objects.
    */
   static async findAll() {
-    const prisma = await getPrismaClient(); // Get the initialized Prisma client
+    const prisma = await getPrismaClient();
     return prisma.user.findMany();
   }
 
-
+  /**
+   * Gets all users belonging to an organization
+   * @param {number|string} organizationId - The organization ID
+   * @returns {Promise<Array<object>>} Array of user objects
+   */
   static async getOrganizationUsers(organizationId) {
-    const prisma = await getPrismaClient(); // Get the initialized Prisma client
+    const prisma = await getPrismaClient();
     return prisma.user.findMany({
       where: {
-        organizationId: organizationId
+        organizationId: parseInt(organizationId, 10)
       }
     });
   }
-
-
-  // 
 
   /**
    * Updates an existing user by its ID.
@@ -114,7 +168,7 @@ static async getPylonUserById(id) {
    * @returns {Promise<object>} The updated user object.
    */
   static async update(id, data) {
-    const prisma = await getPrismaClient(); // Get the initialized Prisma client
+    const prisma = await getPrismaClient();
     return prisma.user.update({
       where: { id },
       data,
@@ -127,7 +181,7 @@ static async getPylonUserById(id) {
    * @returns {Promise<object>} The deleted user object.
    */
   static async delete(id) {
-    const prisma = await getPrismaClient(); // Get the initialized Prisma client
+    const prisma = await getPrismaClient();
     return prisma.user.delete({ where: { id } });
   }
 
@@ -138,11 +192,11 @@ static async getPylonUserById(id) {
    * @returns {Promise<Array<object>>} An array of user objects for the given pagination.
    */
   static async findWithPagination(skip = 0, take = 10) {
-    const prisma = await getPrismaClient(); // Get the initialized Prisma client
+    const prisma = await getPrismaClient();
     return prisma.user.findMany({
       skip,
       take,
-      orderBy: { createdAt: 'desc' }, // Assuming 'createdAt' field exists for ordering
+      orderBy: { createdAt: 'desc' },
     });
   }
 }

@@ -1,17 +1,73 @@
-models
-    mysql
-      Pylon.js
-    supabase
-controllers
-    pylonController.js
-routes
-    pylonRoutes.js
-schemas
-    mysql
-     schema.prisma
-    supabase
-     schema.prisma
-services
-    pylonService.js
-README.md
-
+@semantq/pylon/
+│
+├── controllers/
+│   ├── featureController.js
+│   ├── meteringController.js
+│   ├── modelController.js
+│   ├── organizationController.js
+│   ├── pricingPackageController.js
+│   ├── pricingPackageFeatureController.js
+│   ├── pylonController.js
+│   ├── roleController.js
+│   └── userController.js
+│
+├── models/
+│   ├── mysql/
+│   │   ├── Feature.js
+│   │   ├── Metering.js
+│   │   ├── Model.js
+│   │   ├── Organization.js
+│   │   ├── PricingPackage.js
+│   │   ├── PricingPackageFeature.js
+│   │   ├── Pylon.js
+│   │   ├── Role.js
+│   │   └── User.js
+│   ├── postgresql/
+│   │   ├── Feature.js
+│   │   ├── Metering.js
+│   │   ├── Model.js
+│   │   ├── Organization.js
+│   │   ├── PricingPackage.js
+│   │   ├── PricingPackageFeature.js
+│   │   ├── Pylon.js
+│   │   ├── Role.js
+│   │   └── User.js
+│   └── supabase/
+│       ├── Feature.js
+│       ├── Metering.js
+│       ├── Model.js
+│       ├── Organization.js
+│       ├── PricingPackage.js
+│       ├── PricingPackageFeature.js
+│       ├── Pylon.js
+│       ├── Role.js
+│       └── User.js
+│
+├── routes/
+│   ├── featureRoutes.js
+│   ├── meteringRoutes.js
+│   ├── modelRoutes.js
+│   ├── organizationRoutes.js
+│   ├── pricingPackageFeatureRoutes.js
+│   ├── pricingPackageRoutes.js
+│   ├── pylonRoutes.js
+│   ├── roleRoutes.js
+│   └── userRoutes.js
+│
+├── schemas/
+│   ├── mysql/
+│   └── supabase/
+│
+├── services/
+│   ├── featureService.js
+│   ├── meteringService.js
+│   ├── modelService.js
+│   ├── organizationService.js
+│   ├── pricingPackageFeatureService.js
+│   ├── pricingPackageService.js
+│   ├── pylonService.js
+│   ├── roleService.js
+│   └── userService.js
+│
+├── package.json
+└── README.md

@@ -25,7 +25,6 @@ export default class PricingPackageFeatureModel {
     pricingPackageId: payload.pricingPackageId,
     limitValue: parseInt(payload.limitValue, 10) || 0,
     status: payload.status === '1' || payload.status === true || parseInt(payload.status) === 1,
-    seats: payload.seats ? parseInt(payload.seats, 10) : null
   };
 
   // SINGLE MODE

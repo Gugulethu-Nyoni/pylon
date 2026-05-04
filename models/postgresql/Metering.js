@@ -66,16 +66,11 @@ static async countMonthlyUsage(organizationId, featureName) {
 
 static async countYearlyUsage(organizationId, featureName) {
   const prisma = await getPrismaClient();
-
-  // Ensure organizationId is a string
-  const orgId = parseInt(organizationId);
-
-  // Get the start and end of the current year (UTC-safe)
+  const orgId = parseInt(organizationId, 10);
   const now = new Date();
-  const startOfYear = new Date(Date.UTC(now.getUTCFullYear(), 0, 1)); // Jan 1
-  const endOfYear = new Date(Date.UTC(now.getUTCFullYear() + 1, 0, 1)); // Jan 1 next year
+  const startOfYear = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
+  const endOfYear = new Date(Date.UTC(now.getUTCFullYear() + 1, 0, 1));
 
-  // Count how many records fall within this year
   const count = await prisma.metering.count({
     where: {
       organizationId: orgId,
@@ -90,6 +85,19 @@ static async countYearlyUsage(organizationId, featureName) {
   return count;
 }
 
+static async countTotalUsage(organizationId, featureName) {
+  const prisma = await getPrismaClient();
+  const orgId = parseInt(organizationId, 10);
+  
+  const count = await prisma.metering.count({
+    where: {
+      organizationId: orgId,
+      featureName: featureName
+    }
+  });
+  
+  return count;
+}
 
 
 

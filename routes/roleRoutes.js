@@ -21,6 +21,9 @@ const router = express.Router();
 
 // 🟡 AUTHENTICATED - Logged-in users only
 router.get('/role/roles/account/:organizationId', authenticateToken, roleController.getOrganizationRoles);
+router.get('/role/roles/orgId/:id', authenticateToken, roleController.getRoleByOrgId);
+
+
 
 router.get('/role/roles/:id', authenticateToken, roleController.getRoleById);
 router.post('/role/roles', authenticateToken, roleController.createRole);

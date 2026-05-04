@@ -1,64 +1,59 @@
-// Add to your schema.prisma:
-/*
-model Organization {
-  id        String   @id @default(uuid())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  // Add additional fields as needed
-}
-*/
+/**
+ * Organization Model (PostgreSQL)
+ * 
+ * Current Schema Fields:
+ * - id: Int (autoincrement)
+ * - name: String?
+ * - pricingPackageId: String
+ * - paidPeriodStart: DateTime?
+ * - paidPeriodEnd: DateTime?
+ * - trialStartedAt: DateTime?
+ * - trialEndsAt: DateTime?
+ * - ownerId: Int (unique)
+ * - owner: User relation
+ * - pricingPackage: PricingPackage relation
+ * 
+ * Subscription status is derived from dates:
+ * - If trialEndsAt > now -> TRIALING
+ * - If paidPeriodEnd > now -> ACTIVE
+ * - Else -> EXPIRED/NONE
+ */
 
-// Import the function that returns the Prisma client promise
 import getPrismaClient from '../../../../../lib/prisma.js';
 
 export default class OrganizationModel {
- 
+  
   static async create(data) {
-  const prisma = await getPrismaClient();
-  
-  console.log('=== ORGANIZATION MODEL CREATE ===');
-  console.log('Raw incoming data:', JSON.stringify(data, null, 2));
-  
-  // Handle pricingPackage relation
-  const { pricingPackageId, ownerId, ...restData } = data;
-  
-  console.log('Extracted values:', {
-    pricingPackageId,
-    ownerId,
-    restData: JSON.stringify(restData, null, 2)
-  });
-  
-  const createData = {
-    ...restData,
-    pricingPackage: { connect: { id: pricingPackageId } }
-  };
-  
-  // Handle owner relation if ownerId is provided
-  if (ownerId !== undefined && ownerId !== null) {
-    console.log(`Connecting owner with id: ${ownerId}`);
-    createData.owner = { connect: { id: ownerId } };
+    const prisma = await getPrismaClient();
+    
+    console.log('=== ORGANIZATION MODEL CREATE ===');
+    const { pricingPackageId, ownerId, ...restData } = data;
+    
+    const createData = {
+      ...restData,
+      pricingPackage: { connect: { id: pricingPackageId } }
+    };
+    
+    if (ownerId) {
+      createData.owner = { connect: { id: ownerId } };
+    }
+    
+    try {
+      const result = await prisma.organization.create({ data: createData });
+      console.log('Organization created successfully:', result.id);
+      return result;
+    } catch (error) {
+      console.error('Prisma error:', error.message);
+      throw error;
+    }
   }
-  
-  console.log('Final createData being sent to Prisma:', JSON.stringify(createData, null, 2));
-  
-  try {
-    const result = await prisma.organization.create({ data: createData });
-    console.log('✅ Organization created successfully:', result.id);
-    return result;
-  } catch (error) {
-    console.error('❌ Prisma error:', error.message);
-    console.error('Full error:', error);
-    throw error;
-  }
-}
-
 
   static async findById(id) {
     const prisma = await getPrismaClient();
+    const whereId = typeof id === 'string' ? parseInt(id, 10) : id;
+    
     return prisma.organization.findUnique({ 
-      where: { id },
+      where: { id: whereId },
       include: {
         pricingPackage: {
           include: {
@@ -82,38 +77,47 @@ export default class OrganizationModel {
     });
   }
 
-  static async simulatePayment(id) {
-    const paidPeriodStart = new Date();
-    const paidPeriodEnd = new Date();
-    paidPeriodEnd.setFullYear(paidPeriodEnd.getFullYear() + 1);
-
-    const prisma = await getPrismaClient();
-    return prisma.organization.update({
-      where: { id },
-      data: { paidPeriodStart, paidPeriodEnd }
-    });
-  }
-
   static async update(id, data) {
     const prisma = await getPrismaClient();
     
-    // Handle pricingPackage relation in updates too
-    if (data.pricingPackageId) {
-      const { pricingPackageId, ...restData } = data;
-      return prisma.organization.update({
-        where: { id },
-        data: {
-          ...restData,
-          pricingPackage: { connect: { id: pricingPackageId } }
-        }
-      });
+    const updateData = { ...data };
+    const whereId = typeof id === 'string' ? parseInt(id, 10) : id;
+    
+    if (updateData.pricingPackageId) {
+      const pkgId = updateData.pricingPackageId;
+      delete updateData.pricingPackageId;
+      updateData.pricingPackage = { connect: { id: pkgId } };
+    }
+
+    if (updateData.ownerId) {
+      const ownerId = updateData.ownerId;
+      delete updateData.ownerId;
+      updateData.owner = { connect: { id: ownerId } };
     }
     
-    return prisma.organization.update({ where: { id }, data });
+    return prisma.organization.update({ 
+      where: { id: whereId }, 
+      data: updateData 
+    });
+  }
+
+  static async updateSubscription(id, subscriptionData) {
+    const prisma = await getPrismaClient();
+    const whereId = typeof id === 'string' ? parseInt(id, 10) : id;
+    
+    return prisma.organization.update({
+      where: { id: whereId },
+      data: {
+        paidPeriodStart: subscriptionData.start,
+        paidPeriodEnd: subscriptionData.end,
+        updatedAt: new Date()
+      }
+    });
   }
 
   static async delete(id) {
     const prisma = await getPrismaClient();
-    return prisma.organization.delete({ where: { id } });
+    const whereId = typeof id === 'string' ? parseInt(id, 10) : id;
+    return prisma.organization.delete({ where: { id: whereId } });
   }
 }

@@ -8,7 +8,7 @@ class FeatureController {
         name, 
         unit, 
         model_action, 
-        model_actions, // NEW: array for bundle
+        model_actions,
         description, 
         meterType, 
         timeframe,
@@ -16,8 +16,12 @@ class FeatureController {
         feature_set_name_options, 
         feature_set_name, 
         non_crud_name,
-        crud_bundle // NEW: flag for bundle
+        crud_bundle,
+        isSystemFeature
       } = payloadData; 
+
+      // Normalize isSystemFeature
+      const normalizedIsSystemFeature = isSystemFeature === 'true' || isSystemFeature === true;
 
       // Check if this is a CRUD bundle
       const isCrudBundle = crud_bundle === 'true' || crud_bundle === true;
@@ -39,10 +43,11 @@ class FeatureController {
             unit,
             description: `${description || name} - ${action} operation`,
             timeframe,
-            count: meterType?.includes("COUNT") ?? null,
-            on_off: meterType?.includes("ON_OFF") ?? null,
+            count: meterType?.includes("COUNT") ?? false,
+            on_off: meterType?.includes("ON_OFF") ?? false,
             non_crud: null,
             non_crud_feature_set_name: null,
+            isSystemFeature: normalizedIsSystemFeature
           };
           const result = await featureService.create(finalData);
           results.push(result);
@@ -55,7 +60,7 @@ class FeatureController {
         });
       }
 
-      // Handle single feature (existing logic)
+      // Handle single feature
       let finalName;
       let finalFeatureSet = null;
       const isCrud = feature_type === 'crud';
@@ -78,18 +83,19 @@ class FeatureController {
         finalName = `${finalFeatureSet}_${non_crud_name}`.toLowerCase();
       }
       
-      const supportsCount = meterType?.includes("COUNT") ?? null;
-      const supportsOnOff = meterType?.includes("ON_OFF") ?? null;
+      const supportsCount = meterType?.includes("COUNT") ?? false;
+      const supportsOnOff = meterType?.includes("ON_OFF") ?? false;
       
       const finalData = {
         name: finalName,
-        unit,
-        description,
-        timeframe,
+        unit: unit || null,
+        description: description || null,
+        timeframe: timeframe || 'MONTHLY',
         count: supportsCount,
         on_off: supportsOnOff,
         non_crud: !isCrud ? 1 : null,
         non_crud_feature_set_name: finalFeatureSet,
+        isSystemFeature: normalizedIsSystemFeature
       };
       
       const result = await featureService.create(finalData);
@@ -112,6 +118,8 @@ class FeatureController {
     }
   }
 
+
+  
   async getNonCrudFeatureNames(req, res) {
     try {
       const result = await featureService.getNonCrudFeatureNames();

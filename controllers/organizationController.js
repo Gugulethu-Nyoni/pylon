@@ -13,7 +13,7 @@ class OrganizationController {
 
   async getOrganizationById(req, res) {
     try {
-      const result = await organizationService.getById(req.params.id);
+      const result = await organizationService.getById(parseInt(req.params.id,10));
       res.json(result);
     } catch (err) {
       res.status(404).json({ error: err.message });

@@ -11,35 +11,51 @@ export default class FeatureModel {
   static async create(data, isCrudBundle = false) {
     const prisma = await getPrismaClient();
     
+    // Normalize isSystemFeature to boolean (handle string 'true' or boolean true)
+    const isSystemFeature = data.isSystemFeature === 'true' || data.isSystemFeature === true;
+    
     // If not a CRUD bundle, create single feature
     if (!isCrudBundle) {
-      return prisma.feature.create({ data });
+        const featureData = {
+            name: data.name,
+            description: data.description || null,
+            unit: data.unit || null,
+            timeframe: data.timeframe || 'MONTHLY',
+            count: data.meterType?.includes('COUNT') || data.count || false,
+            on_off: data.meterType?.includes('ON_OFF') || data.on_off || false,
+            non_crud: data.non_crud || null,
+            non_crud_feature_set_name: data.non_crud_feature_set_name || null,
+            isSystemFeature: isSystemFeature
+        };
+        
+        return await prisma.feature.create({ data: featureData });
     }
     
     // CRUD Bundle: Create all 4 features
-    const { name, description, meterType, timeframe, isSystemFeature } = data;
+    const { name, description, meterType, timeframe } = data;
     const actions = ['create', 'read', 'update', 'delete'];
     
     const features = await Promise.all(
-      actions.map(action => 
-        prisma.feature.create({
-          data: {
-            name: `${name}_${action}`,
-            description: `${description} - ${action} operation`,
-            unit: null,
-            timeframe: timeframe || 'MONTHLY',
-            count: meterType?.includes('COUNT') || false,
-            on_off: meterType?.includes('ON_OFF') || false,
-            non_crud: null,
-            non_crud_feature_set_name: null,
-            isSystemFeature: isSystemFeature === 'true' || isSystemFeature === true,
-          }
-        })
-      )
+        actions.map(action => 
+            prisma.feature.create({
+                data: {
+                    name: `${name}_${action}`,
+                    description: `${description || name} - ${action} operation`,
+                    unit: null,
+                    timeframe: timeframe || 'MONTHLY',
+                    count: meterType?.includes('COUNT') || false,
+                    on_off: meterType?.includes('ON_OFF') || false,
+                    non_crud: null,
+                    non_crud_feature_set_name: null,
+                    isSystemFeature: isSystemFeature
+                }
+            })
+        )
     );
     
     return features;
-  }
+}
+
 
   /**
    * Finds a feature by its unique ID.
@@ -61,7 +77,7 @@ export default class FeatureModel {
       where: { non_crud_feature_set_name: { not: null } },
       select: { id: true, non_crud_feature_set_name: true },
     });
-    console.log("✅ Prisma returned:", result);
+    console.log("[FeatureModel.getNonCrudFeatureNames] Result:", result);
     return result;
   }
 
@@ -82,6 +98,13 @@ export default class FeatureModel {
    */
   static async update(id, data) {
     const prisma = await getPrismaClient();
+    
+    // Normalize isSystemFeature if present in update data
+    if (data.isSystemFeature !== undefined) {
+      data.isSystemFeature = data.isSystemFeature === 'true' || data.isSystemFeature === true;
+      console.log(`[FeatureModel.update] Normalized isSystemFeature to: ${data.isSystemFeature}`);
+    }
+    
     return prisma.feature.update({
       where: { id },
       data,

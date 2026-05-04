@@ -34,6 +34,14 @@ export default class RoleModel {
     return prisma.role.findUnique({ where: { id } });
   }
 
+
+  static async findByOrgId(organizationId) {
+    const prisma = await getPrismaClient(); // Get the initialized Prisma client
+    return prisma.role.findMany({ where: { organizationId } });
+  }
+
+  // findByOrgId
+
   /**
    * Retrieves all roles from the database.
    * @returns {Promise<Array<object>>} An array of all role objects.
