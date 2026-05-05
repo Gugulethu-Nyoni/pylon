@@ -2,6 +2,8 @@ import packagePaymentService from '../services/packagePaymentService.js';
 import organizationService from '../services/organizationService.js';
 import PackagePaymentModel from '../models/postgresql/PackagePayment.js';
 import getPrismaClient from '../../../../lib/prisma.js';
+import pylonService from '../services/pylonService.js';
+
 
 class PackagePaymentController {
   /**
@@ -109,8 +111,9 @@ class PackagePaymentController {
     }
   }
 
-  /**
+/**
    * Traffic Controller: Checks if the user needs to pay or is already active.
+   * Uses PylonService.checkSubscription for consistent subscription status logic.
    */
   async checkStatus(req, res) {
     try {
@@ -130,6 +133,10 @@ class PackagePaymentController {
         return res.json({ success: true, status: 'NONE', hasOrganization: false });
       }
 
+      // Use PylonService.checkSubscription for consistent status
+      const subscription = pylonService.checkSubscription(org);
+      
+      // Check if there's a completed payment (for backward compatibility)
       const payment = await prisma.packagePayment.findFirst({
         where: { organizationId: org.id, paymentStatus: 'PAID' },
         orderBy: { createdAt: 'desc' }
@@ -137,10 +144,15 @@ class PackagePaymentController {
 
       return res.json({ 
         success: true, 
-        status: payment ? 'ACTIVE' : 'UNPAID',
+        status: subscription.status,  // ACTIVE, TRIAL, GRACE, LAPSED
         hasOrganization: true,
         hasPayment: !!payment,
-        organization: org 
+        organization: org,
+        subscriptionDetails: {
+          allowed: subscription.allowed,
+          daysRemaining: subscription.daysRemaining,
+          endDate: subscription.endDate
+        }
       });
 
     } catch (err) {

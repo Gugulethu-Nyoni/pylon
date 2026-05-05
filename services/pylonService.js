@@ -10,28 +10,48 @@ class PylonService {
    * Evaluates the organization's current subscription lifecycle phase.
    * Internal helper used by the featureGuard.
    */
-  checkSubscription(org) {
-    const now = dayjs();
+ checkSubscription(org) {
+  const now = dayjs();
 
-    // 1. Active Paid Period
-    if (org.paidPeriodEnd && dayjs(org.paidPeriodEnd).isAfter(now)) {
-      return { status: 'ACTIVE', allowed: true };
-    }
-
-    // 2. Grace Period (7-day buffer after paidPeriodEnd)
-    if (org.paidPeriodEnd && dayjs(org.paidPeriodEnd).add(7, 'day').isAfter(now)) {
-      return { status: 'GRACE', allowed: true };
-    }
-
-    // 3. Active Trial Period
-    if (org.trialEndsAt && dayjs(org.trialEndsAt).isAfter(now)) {
-      return { status: 'TRIAL', allowed: true };
-    }
-
-    // 4. Everything else is Lapsed/Expired
-    return { status: 'LAPSED', allowed: false };
+  // 1. Active Paid Period
+  if (org.paidPeriodEnd && dayjs(org.paidPeriodEnd).isAfter(now)) {
+    const endDate = org.paidPeriodEnd;
+    const daysRemaining = Math.ceil((new Date(endDate) - new Date()) / (1000 * 60 * 60 * 24));
+    return { 
+      status: 'ACTIVE', 
+      allowed: true,
+      daysRemaining,
+      endDate
+    };
   }
 
+  // 2. Grace Period (7-day buffer after paidPeriodEnd)
+  if (org.paidPeriodEnd && dayjs(org.paidPeriodEnd).add(7, 'day').isAfter(now)) {
+    const endDate = dayjs(org.paidPeriodEnd).add(7, 'day').toDate();
+    const daysRemaining = Math.ceil((new Date(endDate) - new Date()) / (1000 * 60 * 60 * 24));
+    return { 
+      status: 'GRACE', 
+      allowed: true,
+      daysRemaining,
+      endDate
+    };
+  }
+
+  // 3. Active Trial Period
+  if (org.trialEndsAt && dayjs(org.trialEndsAt).isAfter(now)) {
+    const endDate = org.trialEndsAt;
+    const daysRemaining = Math.ceil((new Date(endDate) - new Date()) / (1000 * 60 * 60 * 24));
+    return { 
+      status: 'TRIAL', 
+      allowed: true,
+      daysRemaining,
+      endDate
+    };
+  }
+
+  // 4. Everything else is Lapsed/Expired
+  return { status: 'LAPSED', allowed: false, daysRemaining: 0 };
+}
   /**
    * FIXED: Proper middleware factory function with Subscription Gate
    */
