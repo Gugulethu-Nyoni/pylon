@@ -27,26 +27,35 @@ export default class PackagePaymentModel {
     const prisma = await getPrismaClient();
     
     const createData = {
-      organizationId: data.organizationId,
-      pricingPackageId: data.pricingPackageId,
       amount: data.amount,
       paymentStatus: data.paymentStatus || 'PENDING',
       billingCycle: data.billingCycle || 'MONTHLY'
     };
     
-    // Add providerReference if provided
+    // Handle relation connections (from updated service)
+    if (data.organization) {
+      createData.organization = data.organization;
+    } else if (data.organizationId) {
+      createData.organizationId = data.organizationId;
+    }
+    
+    if (data.pricingPackage) {
+      createData.pricingPackage = data.pricingPackage;
+    } else if (data.pricingPackageId) {
+      createData.pricingPackageId = data.pricingPackageId;
+    }
+    
+    // Add optional fields
     if (data.providerReference) {
       createData.providerReference = data.providerReference;
     }
     
-    // Add gatewayReference if provided
     if (data.gatewayReference) {
       createData.gatewayReference = data.gatewayReference;
     }
     
     return prisma.packagePayment.create({ data: createData });
-  }
-
+}
   /**
    * Find payment by provider reference (Paystack reference or Yoco checkoutId)
    */
@@ -83,6 +92,8 @@ export default class PackagePaymentModel {
     if (data.providerReference) updateData.providerReference = data.providerReference;
     if (data.gatewayReference) updateData.gatewayReference = data.gatewayReference;
     if (data.amount) updateData.amount = data.amount;
+    if (data.rawTransactionResponse) updateData.rawTransactionResponse = data.rawTransactionResponse;
+    if (data.rawTransactionLog) updateData.rawTransactionLog = data.rawTransactionLog;
     
     return prisma.packagePayment.update({
       where: { id },
@@ -93,13 +104,44 @@ export default class PackagePaymentModel {
   /**
    * Update payment status only
    */
-  static async updateStatus(id, status) {
+ static async updateStatus(id, statusData) {
     const prisma = await getPrismaClient();
-    return prisma.packagePayment.update({
-      where: { id },
-      data: { paymentStatus: status }
+
+    if (statusData.status !== 'PAID') {
+      return prisma.packagePayment.update({ 
+        where: { id }, 
+        data: { paymentStatus: statusData.status } 
+      });
+    }
+
+    // TRANSACTION: Ensure payment and subscription activation happen together
+    return prisma.$transaction(async (tx) => {
+      const payment = await tx.packagePayment.update({
+        where: { id },
+        data: { paymentStatus: 'PAID' },
+        include: { pricingPackage: true }
+      });
+
+      const now = new Date();
+      const expiryDate = new Date();
+      payment.billingCycle === 'YEARLY' 
+        ? expiryDate.setFullYear(expiryDate.getFullYear() + 1)
+        : expiryDate.setMonth(expiryDate.getMonth() + 1);
+
+      await tx.organization.update({
+        where: { id: payment.organizationId },
+        data: {
+          pricingPackage: {
+            connect: { id: payment.pricingPackageId }
+          },
+          paidPeriodStart: now,
+          paidPeriodEnd: expiryDate
+        }
+      });
+
+      return payment;
     });
-  }
+}
 
   /**
    * Get all payments for a specific organization

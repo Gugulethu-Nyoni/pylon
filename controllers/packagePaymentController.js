@@ -4,104 +4,57 @@ import PackagePaymentModel from '../models/postgresql/PackagePayment.js';
 import getPrismaClient from '../../../../lib/prisma.js';
 import pylonService from '../services/pylonService.js';
 
-
 class PackagePaymentController {
   /**
    * INTERNAL CALLBACK: The universal hand-off point from Blinque/Gateways.
+   * Processes webhook events from Yoco, Paystack, and other payment gateways.
    */
   async handleBlinqueCallback(req, res) {
     console.log("-----------------------------------------");
     console.log("NEW WEBHOOK ARRIVED");
     console.log("-----------------------------------------");
 
-    const deepSeek = (obj, targetKey) => {
-      if (!obj || typeof obj !== 'object') return null;
-      if (Object.prototype.hasOwnProperty.call(obj, targetKey)) return obj[targetKey];
-      if (Array.isArray(obj)) {
-        for (const item of obj) {
-          const found = deepSeek(item, targetKey);
-          if (found !== null) return found;
-        }
-      }
-      for (const key in obj) {
-        if (typeof obj[key] === 'object') {
-          const found = deepSeek(obj[key], targetKey);
-          if (found !== null) return found;
-        }
-      }
-      return null;
-    };
-
     try {
       const payload = req.body;
+      console.log("WEBHOOK REQ.BODY",req.body);
 
-      // 1. Extract Raw Values
-      const rawReference = deepSeek(payload, 'reference') || 
-                           deepSeek(payload, 'checkoutId') || 
-                           payload.externalId;
+      // 1. Extract Values from the normalized Blinque payload
+      const paymentRecordId = payload.paymentRecordId;
+      const gateway = payload.pylon_gateway || payload.gateway || 'unknown';
+      const rawStatus = payload.status || payload.event;
+      const vendorRef = payload.gatewayReference || payload.reference || payload.id;
 
-      const gateway = deepSeek(payload, 'pylon_gateway') || 
-                      deepSeek(payload, 'gateway') || 'unknown';
-      
-      const rawStatus = deepSeek(payload, 'status') || 
-                        deepSeek(payload, 'event');
-
-      const vendorRef = deepSeek(payload, 'id') || 
-                        deepSeek(payload, 'gatewayReference');
-
-      // 2. LOGIC: Handle the timestamp suffix (e.g., "11_1777893" -> "11")
-      let cleanExternalId = rawReference && String(rawReference).includes('_') 
-                              ? String(rawReference).split('_')[0] 
-                              : rawReference;
-          cleanExternalId = parseInt(cleanExternalId,10);
-
-      // 3. Normalize Status
+      // 2. Normalize Status
       const successTerms = ['success', 'charge.success', 'payment.succeeded', 'paid', 'PAID'];
       const normalizedStatus = successTerms.includes(String(rawStatus).toLowerCase()) ? 'PAID' : 'FAILED';
 
       console.log(`[PackagePayment] WEBHOOK PARSE RESULT:`);
-      console.log(` -> Cleaned ID:   ${cleanExternalId}`);
+      console.log(` -> Record ID:    ${paymentRecordId}`);
       console.log(` -> Normalized:   ${normalizedStatus}`);
       console.log(` -> Gateway:      ${gateway}`);
       console.log(` -> Vendor Ref:   ${vendorRef}`);
       console.log(`==========================================`);
 
-      if (!cleanExternalId) {
-        console.error("[PackagePayment] Error: Could not extract reference.");
+      if (!paymentRecordId) {
+        console.error("[PackagePayment] Error: Missing paymentRecordId in webhook.");
         return res.status(400).json({ error: "Missing Reference" });
       }
 
-      // 4. Resolve the DB record
-      const prisma = await getPrismaClient();
-      const paymentRecord = await prisma.packagePayment.findFirst({
-        where: { 
-            organizationId: !isNaN(parseInt(cleanExternalId)) ? parseInt(cleanExternalId) : undefined,
-            paymentStatus: 'PENDING'
-        },
-        orderBy: { createdAt: 'desc' }
-      });
+      // 3. Resolve the DB record
+      const paymentRecord = await PackagePaymentModel.findById(paymentRecordId);
 
       if (!paymentRecord) {
-        console.error(`[PackagePayment] No pending record found for ID: ${cleanExternalId}`);
+        console.error(`[PackagePayment] No record found for ID: ${paymentRecordId}`);
         return res.status(200).json({ message: "Reference not tracked" });
       }
 
-      // 5. Update Payment Record with Audit Logs
-      await PackagePaymentModel.update(paymentRecord.id, {
-        paymentStatus: normalizedStatus,
-        rawResponse: payload, // Maps to rawTransactionResponse in Model
-        logMessage: `Webhook received from ${gateway}. Status: ${normalizedStatus}. Vendor Ref: ${vendorRef}`
+      // 4. Update Payment Record & Trigger Activation via Service
+      await packagePaymentService.updateStatus(paymentRecordId, {
+        status: normalizedStatus,
+        gatewayReference: vendorRef,
+        gateway: gateway,
+        rawResponse: payload
       });
-
-      // 6. Activation Logic
-      if (normalizedStatus === 'PAID') {
-        await organizationService.activateSubscription(
-            cleanExternalId, 
-            paymentRecord.pricingPackageId,
-            paymentRecord.billingCycle
-        );
-        console.log(`[PackagePayment] SUCCESS: Subscription activated for Org ${cleanExternalId}`);
-      }
 
       return res.status(200).json({ success: true });
 
@@ -111,9 +64,8 @@ class PackagePaymentController {
     }
   }
 
-/**
+  /**
    * Traffic Controller: Checks if the user needs to pay or is already active.
-   * Uses PylonService.checkSubscription for consistent subscription status logic.
    */
   async checkStatus(req, res) {
     try {
@@ -133,10 +85,8 @@ class PackagePaymentController {
         return res.json({ success: true, status: 'NONE', hasOrganization: false });
       }
 
-      // Use PylonService.checkSubscription for consistent status
       const subscription = pylonService.checkSubscription(org);
       
-      // Check if there's a completed payment (for backward compatibility)
       const payment = await prisma.packagePayment.findFirst({
         where: { organizationId: org.id, paymentStatus: 'PAID' },
         orderBy: { createdAt: 'desc' }
@@ -144,7 +94,7 @@ class PackagePaymentController {
 
       return res.json({ 
         success: true, 
-        status: subscription.status,  // ACTIVE, TRIAL, GRACE, LAPSED
+        status: subscription.status,
         hasOrganization: true,
         hasPayment: !!payment,
         organization: org,
@@ -166,7 +116,6 @@ class PackagePaymentController {
       const result = await packagePaymentService.initiate(req.body);
       res.status(201).json(result);
     } catch (err) {
-      console.error("Error initiating checkout:", err);
       res.status(400).json({ error: err.message });
     }
   }
@@ -176,7 +125,6 @@ class PackagePaymentController {
       const result = await packagePaymentService.create(req.body);
       res.status(201).json(result);
     } catch (err) {
-      console.error("Error creating payment record:", err);
       res.status(400).json({ error: err.message });
     }
   }

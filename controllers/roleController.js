@@ -39,6 +39,16 @@ class RoleController {
     }
   }
 
+ async getRoleRegistry(req, res) {
+    try {
+      const result = await roleService.getRoleRegistry();
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+  
+// getRoleRegistry
 
   // roleController.js
 

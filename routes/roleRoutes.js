@@ -23,6 +23,8 @@ const router = express.Router();
 router.get('/role/roles/account/:organizationId', authenticateToken, roleController.getOrganizationRoles);
 router.get('/role/roles/orgId/:id', authenticateToken, roleController.getRoleByOrgId);
 
+// role/roles/registry
+router.get('/role/roles/registry', authenticateToken, roleController.getRoleRegistry);
 
 
 router.get('/role/roles/:id', authenticateToken, roleController.getRoleById);

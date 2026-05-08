@@ -13,9 +13,15 @@ class RoleService {
     return await RoleModel.findByOrgId(orgId);
   }
 
+// getRoleRegistry
   async getAll() {
     return await RoleModel.findAll();
   }
+
+  async getRoleRegistry() {
+    return await RoleModel.getRoleRegistry();
+  }
+
 
 async getOrganizationRoles(organizationId) {
     // PASS IT TO THE MODEL
