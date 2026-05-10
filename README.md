@@ -385,4 +385,5 @@ semantq remove:route invoice -y
    - Include clear "next steps" after creation
 
    ToDos
-   - Rework cli to references pylon resources in semantqQL/packages/@semantq/pylon...
+   - Rework cli to generate mcsr resources that reference pylon resources in semantqQL/packages/@semantq/pylon... not node_modules 
+   
