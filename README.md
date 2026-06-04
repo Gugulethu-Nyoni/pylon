@@ -386,4 +386,5 @@ semantq remove:route invoice -y
 
    ToDos
    - Rework cli to generate mcsr resources that reference pylon resources in semantqQL/packages/@semantq/pylon... not node_modules 
+   - Extend to handle field level permissions
    
