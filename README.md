@@ -386,5 +386,10 @@ semantq remove:route invoice -y
 
    ToDos
    - Rework cli to generate mcsr resources that reference pylon resources in semantqQL/packages/@semantq/pylon... not node_modules 
-   - Extend to handle field level permissions
+   - Extend to handle field level permissions 
+   - model:*:* (means on this model user has all actions on all fields)
+   - model:name:* (means on this model user has all actions on name field)
+   - model:*:read (means on this model user can read all fields)
+   - model:name:create (means on this model user can create name field)
+
    

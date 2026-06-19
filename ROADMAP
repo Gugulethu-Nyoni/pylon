@@ -1,0 +1,24 @@
+## Summary
+
+| Layer | What It Does | Model | Example |
+| :--- | :--- | :--- | :--- |
+| **Access Guard** | Can this user do this action? | `Feature` + `UserRole` | Sarah can `submission:employee_details:create` |
+| **Metering** | Has the org hit its plan limit? | `Metering` + `PricingPackageFeature` | Org has used 98/100 submissions this month |
+
+- `form:*` = CRUD on form definitions (building/editing forms)
+- `submission:*` = CRUD on submission data (filling/reading/editing submissions)
+- `workflow:*` = executing workflow-specific actions (API calls, e-signatures)
+- Scoping by formId keeps permissions granular
+- Metering tracks consumption against plan limits
+
+Your Pylon module handles both layers already. The extension is simply registering form-scoped features dynamically when forms are created.
+
+
+
+
+Features are created like this:
+
+model:*:* (means on this model user has all actions on all fields)
+model:name:* (means on this model user has all actions on name field)
+model:*:read (means on this model user can read all fields)
+model:name:create (means on this model user can create name field)
