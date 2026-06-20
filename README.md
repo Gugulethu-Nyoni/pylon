@@ -391,5 +391,6 @@ semantq remove:route invoice -y
    - model:name:* (means on this model user has all actions on name field)
    - model:*:read (means on this model user can read all fields)
    - model:name:create (means on this model user can create name field)
+   - Perhaps a toggle (mode) for model (existing) and field level perms
 
    
