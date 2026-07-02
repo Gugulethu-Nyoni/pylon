@@ -1,6 +1,5 @@
 # pylon
-Feature Guard Package For SaaS Aaplications
-
+SaaS Application feature builder, guard and billing module.
 
 ## SuperAdmin Setup Flow: Theoretical Model Relationships
 
